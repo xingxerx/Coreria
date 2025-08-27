@@ -1,0 +1,13 @@
+{
+  "name": "Epoch of Elria - 3D SVG Sandbox",
+  "short_name": "Elria 3D",
+  "description": "Infinite isometric 3D sandbox rendered with SVG.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b0f1a",
+  "theme_color": "#0f2a4f",
+  "icons": [
+    { "src": "icon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "any maskable" }
+  ]
+}

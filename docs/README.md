@@ -5,18 +5,21 @@ A high-performance C++ game engine featuring parallel processing, SVG graphics, 
 ## 🎮 Features
 
 ### Core Engine
+
 - **Parallel Processing**: Multi-threaded game object updates using `std::thread`
 - **Thread-Safe Operations**: Mutex-protected collectible states
 - **Optimized Performance**: Efficient collision detection and memory management
 - **Cross-Platform**: Compatible with Windows (WSL), Linux, and macOS
 
 ### Graphics System
+
 - **SVG Textures**: Scalable vector graphics for optimal performance
 - **Multiple Renderers**: Console and HTML/SVG output support
 - **Procedural Assets**: Runtime SVG generation for game objects
 - **Texture Management**: Centralized asset loading and caching
 
 ### Game Environment
+
 - **Camera System**: Smooth following and world-to-screen coordinate conversion
 - **Particle Effects**: Dynamic particle systems for visual feedback
 - **Platform Physics**: Collision detection and response
@@ -24,48 +27,32 @@ A high-performance C++ game engine featuring parallel processing, SVG graphics, 
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- C++11 compatible compiler (g++, clang++)
-- pthread support
-- WSL (for Windows users)
-
-### Building
+### One Command
 
 ```bash
-# Compile the original parallel demo
-g++ main.cpp -o game_engine_parallel_demo -std=c++11 -pthread
-
-# Compile the enhanced graphics version
-g++ main_simple_graphics.cpp Vector2D.cpp graphics.cpp -o game_engine_simple_graphics -std=c++11 -pthread
-
-# Or use the Makefile
-make all
+./game_engine
 ```
 
-### Running
+This launches the 3D SVG engine in your default browser, rendering an infinite isometric world with a 3D player.
 
-```bash
-# Run the original parallel engine
-./game_engine_parallel_demo
+- Controls: WASD to move, Q/E up/down, Shift to sprint
+- Cross-platform: macOS, Linux (xdg-open), Windows (game_engine.bat)
 
-# Run the enhanced graphics version
-./game_engine_simple_graphics
+### What it does
 
-# Run the walkable game (turn-based)
-./game_walkable_simple
+- Generates an infinite, procedurally-rendered 3D world using SVG
+- Renders via isometric projection with a simple 3D player avatar
+- Streams world tiles (“chunks”) around the player for infinite exploration
 
-# Run the interactive SFML version (real-time)
-./compile_interactive.sh  # Compile first
-./game_interactive_simple
+### Requirements
 
-# Or use make targets
-make run-original
-make run-simple
-```
+- A modern web browser (Chrome/Edge/Firefox/Safari)
+
+No native compiler or SFML is required to run the SVG engine path.
 
 ## 📁 Project Structure
 
-```
+```text
 Epoch of Elria/
 ├── main.cpp                    # Original parallel game engine
 ├── main_simple_graphics.cpp    # Enhanced version with SVG graphics

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml" sizes="any">
+  <meta name="theme-color" content="#0f2a4f">
+  <title>Epoch of Elria - 3D SVG Infinite World</title>
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; background: #0b0f1a; overflow: hidden; }
+    #hud { position: absolute; top: 10px; left: 10px; color: #e6f0ff; font: 12px/1.4 system-ui, sans-serif; background: rgba(0,0,0,0.35); padding: 8px 10px; border-radius: 6px; }
+    #hud kbd { padding: 1px 4px; border-radius: 4px; background: #1e293b; border: 1px solid #334155; color: #e2e8f0; }
+    #hud-right { position: absolute; top: 10px; right: 10px; color: #e6f0ff; font: 12px/1.4 system-ui, sans-serif; }
+    #minimap { filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3)); border-radius: 8px; }
+    svg { width: 100vw; height: 100vh; display: block; }
+  </style>
+</head>
+<body>
+  <div id="hud">
+    <div><strong>Epoch of Elria - 3D SVG Engine</strong></div>
+    <div>Infinite world (procedural), SVG rendering, isometric projection</div>
+    <div>Controls: <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move • <kbd>Q</kbd>/<kbd>E</kbd> up/down • <kbd>Shift</kbd> sprint</div>
+    <div id="stats"></div>
+  </div>
+  <div id="hud-right">
+    <canvas id="minimap" width="180" height="120"></canvas>
+    <div id="perf" style="text-align:right;margin-top:6px;opacity:.9"></div>
+  </div>
+  <svg id="scene" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0%" stop-color="#0b1633"/>
+        <stop offset="100%" stop-color="#0f2a4f"/>
+      </linearGradient>
+    </defs>
+    <rect x="0" y="0" width="1200" height="800" fill="url(#sky)"/>
+    <g id="world"></g>
+    <g id="player"></g>
+  </svg>
+  <script>
+    // PWA: register service worker and handle install prompt
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js');
+    }
+  </script>
+  <script src="main.js"></script>
+</body>
+</html>
