@@ -5,9 +5,42 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <algorithm>
 
 // Forward declarations
 class World3D;
+
+// --- 3D World Bounds ---
+struct WorldBounds3D {
+    Vector3D min;
+    Vector3D max;
+
+    WorldBounds3D(const Vector3D& minBounds = Vector3D(-50, -10, -50),
+                  const Vector3D& maxBounds = Vector3D(50, 50, 50))
+        : min(minBounds), max(maxBounds) {}
+
+    bool contains(const Vector3D& point) const {
+        return (point.x >= min.x && point.x <= max.x) &&
+               (point.y >= min.y && point.y <= max.y) &&
+               (point.z >= min.z && point.z <= max.z);
+    }
+
+    Vector3D clamp(const Vector3D& point) const {
+        return Vector3D(
+            std::max(min.x, std::min(max.x, point.x)),
+            std::max(min.y, std::min(max.y, point.y)),
+            std::max(min.z, std::min(max.z, point.z))
+        );
+    }
+
+    Vector3D getSize() const {
+        return max - min;
+    }
+
+    Vector3D getCenter() const {
+        return (min + max) * 0.5;
+    }
+};
 
 // --- Base 3D GameObject ---
 class GameObject3D {
@@ -37,6 +70,11 @@ public:
     bool isActive() const { return active; }
     bool isVisible() const { return visible; }
     const Transform3D& getTransform() const { return transform; }
+
+    WorldBounds3D getBounds() const {
+        Vector3D halfSize = size * 0.5;
+        return WorldBounds3D(transform.position - halfSize, transform.position + halfSize);
+    }
 
     // Setters
     void setPosition(const Vector3D& pos) { transform.position = pos; }
@@ -201,6 +239,11 @@ public:
     const Vector3D& getColor() const { return color; }
     void setColor(const Vector3D& col) { color = col; }
 
+    WorldBounds3D getBounds() const {
+        Vector3D halfSize = size * 0.5;
+        return WorldBounds3D(transform.position - halfSize, transform.position + halfSize);
+    }
+
     void Update(double deltaTime, World3D* world = nullptr) override {
         // Platforms are usually static, but could have moving platforms
         GameObject3D::Update(deltaTime, world);
@@ -217,36 +260,6 @@ public:
     }
 };
 
-// --- 3D World Bounds ---
-struct WorldBounds3D {
-    Vector3D min;
-    Vector3D max;
-    
-    WorldBounds3D(const Vector3D& minBounds = Vector3D(-50, -10, -50),
-                  const Vector3D& maxBounds = Vector3D(50, 50, 50))
-        : min(minBounds), max(maxBounds) {}
 
-    bool contains(const Vector3D& point) const {
-        return (point.x >= min.x && point.x <= max.x) &&
-               (point.y >= min.y && point.y <= max.y) &&
-               (point.z >= min.z && point.z <= max.z);
-    }
-
-    Vector3D clamp(const Vector3D& point) const {
-        return Vector3D(
-            std::max(min.x, std::min(max.x, point.x)),
-            std::max(min.y, std::min(max.y, point.y)),
-            std::max(min.z, std::min(max.z, point.z))
-        );
-    }
-
-    Vector3D getSize() const {
-        return max - min;
-    }
-
-    Vector3D getCenter() const {
-        return (min + max) * 0.5;
-    }
-};
 
 #endif // GAMEOBJECT3D_H

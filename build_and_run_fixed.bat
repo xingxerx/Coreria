@@ -29,6 +29,7 @@ exit /b 1
 
 :build_with_gcc
 echo.
+
 echo Building The Dream Weaver's Heart with g++...
 echo ═══════════════════════════════════════════════
 
@@ -42,21 +43,28 @@ if %errorlevel% neq 0 (
 
 echo Building RPG characters demo...
 cd /d "%~dp0src\epoch_of_elria"
-g++ -std=c++17 main_rpg_characters.cpp -I../dream_weavers_heart -o rpg_characters.exe 2>nul
+g++ -std=c++17 main_rpg_characters.cpp ../dream_weavers_heart/GameObject3D.cpp -I../dream_weavers_heart -o rpg_characters.exe 2>nul
 if %errorlevel% neq 0 (
-    g++ -std=c++11 main_rpg_characters.cpp -I../dream_weavers_heart -o rpg_characters.exe
+    g++ -std=c++11 main_rpg_characters.cpp ../dream_weavers_heart/GameObject3D.cpp -I../dream_weavers_heart -o rpg_characters.exe
 )
 
 echo Building 3D world demo...
-g++ -std=c++17 main_3d_openworld.cpp -I../dream_weavers_heart -o game_3d_openworld.exe 2>nul
+g++ -std=c++17 main_3d_openworld.cpp ../dream_weavers_heart/GameObject3D.cpp -I../dream_weavers_heart -o game_3d_openworld.exe 2>nul
 if %errorlevel% neq 0 (
-    g++ -std=c++11 main_3d_openworld.cpp -I../dream_weavers_heart -o game_3d_openworld.exe
+    g++ -std=c++11 main_3d_openworld.cpp ../dream_weavers_heart/GameObject3D.cpp -I../dream_weavers_heart -o game_3d_openworld.exe
+)
+
+echo Building 3D sandbox...
+g++ -std=c++17 main_3d_sandbox.cpp ../dream_weavers_heart/GameObject3D.cpp -I../dream_weavers_heart -o game_3d_sandbox.exe 2>nul
+if %errorlevel% neq 0 (
+    g++ -std=c++11 main_3d_sandbox.cpp ../dream_weavers_heart/GameObject3D.cpp -I../dream_weavers_heart -o game_3d_sandbox.exe
 )
 
 goto :run_games
 
 :build_with_msvc
 echo.
+
 echo Building The Dream Weaver's Heart with Visual Studio...
 echo ═══════════════════════════════════════════════════════
 
@@ -75,10 +83,14 @@ cl /EHsc main_rpg_characters.cpp /I../dream_weavers_heart /Fe:rpg_characters.exe
 echo Building 3D world demo...
 cl /EHsc main_3d_openworld.cpp /I../dream_weavers_heart /Fe:game_3d_openworld.exe >nul 2>&1
 
+echo Building 3D sandbox...
+cl /EHsc main_3d_sandbox.cpp /I../dream_weavers_heart /Fe:game_3d_sandbox.exe >nul 2>&1
+
 goto :run_games
 
 :run_games
 echo.
+
 echo ✓ Build complete!
 echo.
 echo Available games:
@@ -95,15 +107,20 @@ if exist "src\epoch_of_elria\rpg_characters.exe" (
 if exist "src\epoch_of_elria\game_3d_openworld.exe" (
     echo ✓ game_3d_openworld.exe - 3D world exploration
 )
+if exist "src\epoch_of_elria\game_3d_sandbox.exe" (
+    echo ✓ game_3d_sandbox.exe - 3D Sandbox
+)
 
 echo.
+
 echo Choose which game to run:
 echo 1. Complete Dream Weaver's Heart (recommended)
 echo 2. RPG Characters Demo
 echo 3. 3D World Exploration
-echo 4. Exit
+echo 4. 3D Sandbox
+echo 5. Exit
 echo.
-set /p choice="Enter your choice (1-4): "
+set /p choice="Enter your choice (1-5): "
 
 if "%choice%"=="1" (
     if exist "src\dream_weavers_heart\dream_weaver_complete.exe" (
@@ -142,10 +159,23 @@ if "%choice%"=="3" (
 )
 
 if "%choice%"=="4" (
+    if exist "src\epoch_of_elria\game_3d_sandbox.exe" (
+        echo.
+        echo Starting 3D Sandbox...
+        echo ═══════════════════════════════════
+        cd /d "%~dp0src\epoch_of_elria"
+        game_3d_sandbox.exe
+    ) else (
+        echo ❌ game_3d_sandbox.exe not found!
+    )
+)
+
+if "%choice%"=="5" (
     echo Goodbye!
     exit /b 0
 )
 
 echo.
+
 echo Game finished. Press any key to exit...
 pause >nul

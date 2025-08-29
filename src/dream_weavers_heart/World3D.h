@@ -101,6 +101,26 @@ public:
         }
     }
 
+    void createPlatform(const Vector3D& pos, const Vector3D& size) {
+        auto platform = std::unique_ptr<Platform3D>(new Platform3D(pos, size));
+        platform->setColor(Vector3D(0.8, 0.8, 0.8)); // Light gray color for created platforms
+        addPlatform(std::move(platform));
+    }
+
+    bool destroyPlatform(const Vector3D& pos) {
+        auto it = std::remove_if(platforms.begin(), platforms.end(),
+            [&](const std::unique_ptr<Platform3D>& platform) {
+                // Simple check if the position is within the platform's bounds
+                return platform->getBounds().contains(pos);
+            });
+
+        if (it != platforms.end()) {
+            platforms.erase(it, platforms.end());
+            return true;
+        }
+        return false;
+    }
+
     // Physics and collision
     bool checkPlatformCollision(const Vector3D& position, const Vector3D& size, Vector3D& correctionOffset) {
         correctionOffset = Vector3D::Zero();

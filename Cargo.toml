@@ -1,0 +1,13 @@
+[package]
+name = "epoch_of_elria"
+version = "0.1.0"
+edition = "2021"
+authors = ["xingxerx <xingxerx@gmail.com>"]
+description = "Complete Epoch of Elria Game Engine - Combining C++ and Rust components"
+license = "MIT"
+
+
+
+[dependencies]
+
+
