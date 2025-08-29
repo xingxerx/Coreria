@@ -4,6 +4,10 @@
 #include <cmath>
 #include <iostream>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 // --- Vector3D Class for 3D Open World ---
 class Vector3D {
 public:

@@ -4,7 +4,7 @@ echo ║           The Dream Weaver's Heart - Build Script           ║
 echo ╚══════════════════════════════════════════════════════════════╝
 echo.
 
-cd /d "F:\Epoch of Elria"
+cd /d "%~dp0..\src\epoch_of_elria"
 
 echo Checking for C++ compiler...
 where g++ >nul 2>&1
