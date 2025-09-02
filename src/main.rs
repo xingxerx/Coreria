@@ -1,371 +1,205 @@
-use std::io::{self, Write};
-use std::collections::HashMap;
+// Epoch of Elria - Sandbox Open World with SVG Character
 
-#[derive(Debug, Clone)]
-struct Vector3D {
-    x: f64,
-    y: f64,
-    z: f64,
+use epoch_of_elria::*;
+use std::error::Error;
+
+// Helper function to create SVG character data
+fn create_svg_character() -> String {
+    format!(r#"<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="30" width="24" height="28" fill="blue" rx="4" stroke="black" stroke-width="1"/>
+        <circle cx="32" cy="18" r="12" fill="peachpuff" stroke="black" stroke-width="1"/>
+        <circle cx="28" cy="16" r="2" fill="black"/>
+        <circle cx="36" cy="16" r="2" fill="black"/>
+        <path d="M 28 22 Q 32 26 36 22" stroke="black" stroke-width="1" fill="none"/>
+        <rect x="12" y="32" width="8" height="16" fill="peachpuff" rx="4"/>
+        <rect x="44" y="32" width="8" height="16" fill="peachpuff" rx="4"/>
+        <rect x="22" y="58" width="8" height="16" fill="brown" rx="4"/>
+        <rect x="34" y="58" width="8" height="16" fill="brown" rx="4"/>
+        <circle cx="32" cy="32" r="30" fill="none" stroke="gold" stroke-width="1" opacity="0.3"/>
+    </svg>"#)
 }
 
-impl Vector3D {
-    fn new(x: f64, y: f64, z: f64) -> Self {
-        Self { x, y, z }
-    }
-    
-    fn length(&self) -> f64 {
-        (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
-    }
-    
-    fn add(&self, other: &Vector3D) -> Vector3D {
-        Vector3D::new(self.x + other.x, self.y + other.y, self.z + other.z)
-    }
+// Helper function to create base plate texture
+fn create_base_plate_texture() -> String {
+    format!(r#"<svg width="512" height="512" xmlns="http://www.w3.org/2000/svg">
+        <rect width="512" height="512" fill="forestgreen"/>
+        <g opacity="0.6">
+            <rect x="10" y="10" width="2" height="8" fill="limegreen"/>
+            <rect x="25" y="15" width="2" height="6" fill="limegreen"/>
+            <rect x="40" y="8" width="2" height="10" fill="limegreen"/>
+            <rect x="55" y="12" width="2" height="7" fill="limegreen"/>
+            <rect x="70" y="18" width="2" height="5" fill="limegreen"/>
+        </g>
+        <circle cx="100" cy="100" r="15" fill="saddlebrown" opacity="0.4"/>
+        <circle cx="300" cy="200" r="20" fill="saddlebrown" opacity="0.3"/>
+        <circle cx="450" cy="350" r="12" fill="saddlebrown" opacity="0.4"/>
+        <circle cx="150" cy="150" r="3" fill="dimgray"/>
+        <circle cx="350" cy="100" r="4" fill="dimgray"/>
+        <circle cx="200" cy="400" r="2" fill="dimgray"/>
+    </svg>"#)
 }
 
-#[derive(Debug, Clone)]
-struct GameObject {
-    name: String,
-    position: Vector3D,
-    properties: HashMap<String, String>,
-}
+fn main() -> Result<(), Box<dyn Error>> {
+    println!("🌍 Initializing Epoch of Elria - Sandbox Open World...");
 
-impl GameObject {
-    fn new(name: String, position: Vector3D) -> Self {
-        Self {
-            name,
-            position,
-            properties: HashMap::new(),
+    // Create engine configuration for sandbox world
+    let config = EngineConfig {
+        window_width: 1600,
+        window_height: 900,
+        window_title: "Epoch of Elria - Sandbox Open World".to_string(),
+        vsync: true,
+        fullscreen: false,
+        max_fps: Some(60),
+        enable_physics: true,  // Enable physics for sandbox interactions
+        enable_audio: true,    // Enable audio for immersive experience
+        debug_mode: true,
+    };
+
+    // Initialize the game engine
+    let mut engine = GameEngine::new(config)?;
+
+    println!("✅ Engine initialized successfully!");
+    println!("🌍 Creating sandbox open world...");
+
+    // Create UI for sandbox world
+    let mut ui = UI::new();
+
+    // Get the scene for world building
+    let scene = engine.get_scene();
+
+    // === CREATE BASE PLATE (GROUND) ===
+    println!("🏗️  Creating base plate...");
+
+    // Create a large ground plane (base plate) - 100x100 units
+    let ground_size = 50.0;
+    scene.add_platform(
+        Vector3D::new(0.0, -1.0, 0.0),           // Position (slightly below origin)
+        Vector3D::new(ground_size, 0.2, ground_size)  // Size: 100x0.4x100 units
+    );
+
+    // Add some smaller platforms for variety
+    for i in 0..8 {
+        let angle = (i as f32 * 2.0 * std::f32::consts::PI) / 8.0;
+        let distance = 15.0 + (i as f32 * 2.0);
+        let x = angle.cos() * distance;
+        let z = angle.sin() * distance;
+        let y = (i as f32 * 0.5) - 0.5; // Varying heights
+
+        scene.add_platform(
+            Vector3D::new(x, y, z),
+            Vector3D::new(3.0, 0.3, 3.0)
+        );
+    }
+
+    // === CREATE SVG CHARACTER ===
+    println!("👤 Creating SVG character...");
+
+    // Generate SVG character data
+    let character_svg = create_svg_character();
+    println!("🎨 SVG Character created: {} bytes", character_svg.len());
+
+    // Add the player character at a good starting position on the base plate
+    let player_id = scene.add_player(Vector3D::new(0.0, 1.0, 0.0));
+
+    // Note: The SVG character data would be used by the rendering system
+    // to display a custom character instead of the default 3D model
+
+    // === ADD SANDBOX ELEMENTS ===
+    println!("🎮 Adding sandbox elements...");
+
+    // Scatter collectibles around the world
+    for i in 0..12 {
+        let angle = (i as f32 * 2.0 * std::f32::consts::PI) / 12.0;
+        let distance = 5.0 + (i as f32 * 2.0);
+        let x = angle.cos() * distance;
+        let z = angle.sin() * distance;
+        let y = 1.0 + (i as f32 * 0.2); // Varying heights
+
+        scene.add_collectible(Vector3D::new(x, y, z), 5 + (i * 2)); // Varying values
+    }
+
+    // Add some enemies for interaction
+    for i in 0..6 {
+        let x = (i as f32 - 2.5) * 8.0;
+        let z = if i % 2 == 0 { 20.0 } else { -20.0 };
+        let y = 1.0;
+
+        scene.add_enemy(Vector3D::new(x, y, z));
+    }
+
+    println!("🌟 Sandbox world created successfully!");
+    println!("🎮 Controls:");
+    println!("   WASD - Move character");
+    println!("   Mouse - Look around");
+    println!("   Space - Jump");
+    println!("   E - Interact");
+    println!("   ESC - Exit");
+    println!("🌍 Explore the open world and collect items!");
+
+    // Start the sandbox game loop
+    engine.update(|scene, idle_manager, input, delta_time, ui| {
+        // === SANDBOX GAME LOGIC ===
+
+        // Character movement (enhanced for open world)
+        let move_speed = 10.0 * delta_time;
+        let mut movement = Vector3D::new(0.0, 0.0, 0.0);
+
+        if input.is_key_pressed(input::Key::W) {
+            movement.z -= move_speed; // Move forward
         }
-    }
-}
-
-#[derive(Debug, Clone)]
-struct Character {
-    name: String,
-    description: String,
-    position: Vector3D,
-    health: i32,
-    abilities: Vec<String>,
-}
-
-impl Character {
-    fn new(name: &str, description: &str) -> Self {
-        Self {
-            name: name.to_string(),
-            description: description.to_string(),
-            position: Vector3D::new(0.0, 0.0, 0.0),
-            health: 100,
-            abilities: Vec::new(),
+        if input.is_key_pressed(input::Key::S) {
+            movement.z += move_speed; // Move backward
         }
-    }
-    
-    fn add_ability(&mut self, ability: &str) {
-        self.abilities.push(ability.to_string());
-    }
-}
-
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("╔══════════════════════════════════════════════════════════════╗");
-    println!("║                EPOCH OF ELRIA GAME ENGINE                   ║");
-    println!("║                     Version 0.1.0                           ║");
-    println!("╚══════════════════════════════════════════════════════════════╝");
-    println!();
-    
-    println!("🌟 Welcome to Epoch of Elria - Rust Edition! 🌟");
-    println!();
-    println!("Choose your adventure:");
-    println!("1. 🎮 Complete Demo - Full game experience");
-    println!("2. 🎭 Dream Weaver Mode - Narrative experience");
-    println!("3. 💻 Terminal Mode - Classic text adventure");
-    println!("4. 🚀 Engine Test - Technical demo");
-    println!("5. ❌ Exit");
-    println!();
-    print!("Enter your choice (1-5): ");
-    io::stdout().flush()?;
-    
-    let mut input = String::new();
-    io::stdin().read_line(&mut input)?;
-    let choice = input.trim();
-    
-    match choice {
-        "1" => run_complete_demo()?,
-        "2" => run_dream_weaver_mode()?,
-        "3" => run_terminal_mode()?,
-        "4" => run_engine_test()?,
-        "5" => {
-            println!("👋 Thanks for trying Epoch of Elria!");
-            return Ok(());
-        },
-        _ => {
-            println!("Invalid choice. Please run the program again.");
-            return Ok(());
+        if input.is_key_pressed(input::Key::A) {
+            movement.x -= move_speed; // Move left
         }
-    }
-
-    Ok(())
-}
-
-fn run_complete_demo() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🌟 Starting Complete Demo Mode...");
-    println!("This combines all game components into one experience!");
-    println!();
-    
-    let mut game_state = create_demo_state();
-    let mut running = true;
-    
-    while running {
-        // Clear screen
-        print!("\x1B[2J\x1B[H");
-        
-        // Render game state
-        render_demo_frame(&game_state);
-        
-        // Get user input
-        print!("\nEnter command (w/a/s/d to move, c for characters, q to quit): ");
-        io::stdout().flush()?;
-        
-        let mut input = String::new();
-        io::stdin().read_line(&mut input)?;
-        let input = input.trim().to_lowercase();
-        
-        match input.as_str() {
-            "w" => game_state.player_y -= 1.0,
-            "s" => game_state.player_y += 1.0,
-            "a" => game_state.player_x -= 1.0,
-            "d" => game_state.player_x += 1.0,
-            "c" => show_characters(),
-            "q" => running = false,
-            _ => println!("Unknown command: {}", input),
+        if input.is_key_pressed(input::Key::D) {
+            movement.x += move_speed; // Move right
         }
-        
-        game_state.time += 1.0;
-        game_state.score += 10;
-    }
-    
-    println!("Thanks for playing! Final score: {}", game_state.score);
-    Ok(())
-}
-
-fn run_engine_test() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🚀 Starting Engine Test Mode...");
-    println!("Testing core game engine components...");
-    println!();
-    
-    // Test basic math
-    println!("📐 Testing Vector3D math...");
-    let v1 = Vector3D::new(1.0, 2.0, 3.0);
-    let v2 = Vector3D::new(4.0, 5.0, 6.0);
-    let v3 = v1.add(&v2);
-    println!("Vector addition: {:?} + {:?} = {:?}", v1, v2, v3);
-    println!("Vector magnitude: |{:?}| = {:.2}", v1, v1.length());
-    println!();
-    
-    // Test game objects
-    println!("🎮 Testing Game Objects...");
-    let player = GameObject::new("Player".to_string(), Vector3D::new(0.0, 1.0, 0.0));
-    let collectible = GameObject::new("Crystal".to_string(), Vector3D::new(2.0, 1.0, 0.0));
-    println!("Created player at: {:?}", player.position);
-    println!("Created collectible at: {:?}", collectible.position);
-    println!();
-    
-    // Test character system
-    println!("👥 Testing Character System...");
-    let mut xing = Character::new("Xing (The Weaver)", "Master of stories and reality architecture");
-    xing.add_ability("Weave Platform");
-    xing.add_ability("Create Story Sanctuary");
-    println!("Character: {}", xing.name);
-    println!("Description: {}", xing.description);
-    println!("Abilities: {:?}", xing.abilities);
-    println!();
-    
-    println!("✅ All engine tests completed successfully!");
-    println!("Press Enter to continue...");
-    let mut input = String::new();
-    io::stdin().read_line(&mut input)?;
-    
-    Ok(())
-}
-
-fn run_dream_weaver_mode() -> Result<(), Box<dyn std::error::Error>> {
-    println!("✨ Starting Dream Weaver Mode...");
-    println!("The cosmic battle for narrative freedom begins!");
-    println!();
-    
-    show_dream_weaver_intro();
-    
-    let characters = vec![
-        "Xing (The Weaver) - Master of stories and reality architecture",
-        "Xerx (The Liberator) - Fighter against mental oppression", 
-        "The Heart - Catalyst of narrative potential",
-        "Lyra (Pure Melody) - Awakener of consciousness through harmony",
-    ];
-    
-    println!("🎭 CHARACTERS:");
-    for (i, character) in characters.iter().enumerate() {
-        println!("{}. {}", i + 1, character);
-    }
-    
-    println!("\nPress Enter to begin the narrative journey...");
-    let mut input = String::new();
-    io::stdin().read_line(&mut input)?;
-    
-    Ok(())
-}
-
-fn run_terminal_mode() -> Result<(), Box<dyn std::error::Error>> {
-    println!("💻 Starting Terminal Mode...");
-    println!("Classic text-based adventure experience!");
-    
-    let mut score = 0;
-    let mut running = true;
-    
-    while running {
-        println!("\n═══════════════════════════════════════");
-        println!("🌟 EPOCH OF ELRIA - TERMINAL MODE 🌟");
-        println!("═══════════════════════════════════════");
-        println!("Score: {}", score);
-        println!();
-        println!("1. Explore the Metaverse");
-        println!("2. Character Interactions");
-        println!("3. Reality Manipulation");
-        println!("4. Narrative Combat");
-        println!("5. View Statistics");
-        println!("6. Quit");
-        println!();
-        print!("Choose an option (1-6): ");
-        io::stdout().flush()?;
-        
-        let mut input = String::new();
-        io::stdin().read_line(&mut input)?;
-        
-        match input.trim() {
-            "1" => {
-                println!("🌌 You explore the infinite Metaverse...");
-                println!("Reality shifts around you as stories manifest!");
-                let bonus = 50;
-                score += bonus;
-                println!("You gained {} points!", bonus);
-            },
-            "2" => {
-                println!("👥 You interact with the Dream Weaver characters...");
-                println!("Their unique abilities resonate with your consciousness!");
-                let bonus = 75;
-                score += bonus;
-                println!("You gained {} points!", bonus);
-            },
-            "3" => {
-                println!("🌀 You manipulate the fabric of reality...");
-                println!("New platforms materialize from pure narrative energy!");
-                let bonus = 100;
-                score += bonus;
-                println!("You gained {} points!", bonus);
-            },
-            "4" => {
-                println!("⚔️ You engage in narrative combat with The One...");
-                println!("Creativity clashes against absolute order!");
-                let bonus = 150;
-                score += bonus;
-                println!("You gained {} points!", bonus);
-            },
-            "5" => {
-                println!("📊 STATISTICS:");
-                println!("Current Score: {}", score);
-                println!("Game Version: 0.1.0");
-                println!("Engine Status: Active");
-                println!("Platform: Rust");
-            },
-            "6" => {
-                running = false;
-                println!("Thanks for playing! Final score: {}", score);
-            },
-            _ => println!("Invalid option. Please choose 1-6."),
+        if input.is_key_pressed(input::Key::Space) {
+            movement.y += move_speed * 2.0; // Jump
         }
-    }
-    
-    Ok(())
-}
 
-#[derive(Debug)]
-struct DemoState {
-    player_x: f64,
-    player_y: f64,
-    score: i32,
-    time: f64,
-}
+        // Apply movement to player (if we can access player position)
+        // This would need to be implemented in the scene system
 
-fn create_demo_state() -> DemoState {
-    DemoState {
-        player_x: 0.0,
-        player_y: 0.0,
-        score: 0,
-        time: 0.0,
-    }
-}
+        // === SANDBOX INTERACTIONS ===
 
-fn render_demo_frame(state: &DemoState) {
-    println!("╔══════════════════════════════════════════════════════════════╗");
-    println!("║                    EPOCH OF ELRIA DEMO                      ║");
-    println!("╚══════════════════════════════════════════════════════════════╝");
-    println!("Player Position: ({:.1}, {:.1})", state.player_x, state.player_y);
-    println!("Score: {} | Time: {:.1}s", state.score, state.time);
-    println!();
-    
-    // Simple ASCII world
-    println!("World View:");
-    println!("┌────────────────────────────────────────┐");
-    for y in -5..=5 {
-        print!("│");
-        for x in -19..=19 {
-            if (state.player_x as i32 - x).abs() <= 1 && (state.player_y as i32 - y).abs() <= 1 {
-                print!("@");
-            } else if x == 0 && y == 0 {
-                print!("●");
-            } else if x % 5 == 0 && y % 3 == 0 {
-                print!("■");
-            } else {
-                print!(" ");
+        // Interaction key
+        if input.is_key_pressed(input::Key::E) {
+            // Add interaction logic here
+            println!("🔍 Interacting with world...");
+        }
+
+        // === DYNAMIC WORLD UPDATES ===
+
+        // Update idle systems for resource generation
+        idle_manager.update(delta_time as f64);
+
+        // Add some dynamic elements (could spawn new objects, etc.)
+        static mut time_accumulator: f32 = 0.0;
+        unsafe {
+            time_accumulator += delta_time;
+
+            // Every 10 seconds, add some dynamic content
+            if time_accumulator > 10.0 {
+                time_accumulator = 0.0;
+                println!("🌟 Dynamic world event triggered!");
+                // Could add new collectibles, enemies, etc.
             }
         }
-        println!("│");
-    }
-    println!("└────────────────────────────────────────┘");
-    println!("@ = Player, ● = Earth, ■ = Platform");
-}
 
-fn show_characters() {
-    println!("\n🎭 DREAM WEAVER CHARACTERS:");
-    println!("═══════════════════════════════════════");
-    println!("1. Xing (The Weaver)");
-    println!("   📝 Master of stories and reality architecture");
-    println!("   🎯 Abilities: Weave Platform, Create Story Sanctuary, Anchor Reality");
-    println!();
-    println!("2. Xerx (The Liberator)");
-    println!("   📝 Fighter against mental oppression");
-    println!("   🎯 Abilities: Liberate Narrative, Break Mental Chains, Awaken Truth");
-    println!();
-    println!("3. The Heart");
-    println!("   📝 Catalyst of narrative potential");
-    println!("   🎯 Abilities: Story Catalyst, Amplify Emotions, Connect Souls");
-    println!();
-    println!("4. Lyra (Pure Melody)");
-    println!("   📝 Awakener of consciousness through harmony");
-    println!("   🎯 Abilities: Harmonic Resonance, Awaken Consciousness, Purify Sound");
-    println!();
-    println!("Press Enter to continue...");
-    let mut input = String::new();
-    io::stdin().read_line(&mut input).unwrap();
-}
+        // === UI UPDATES ===
 
-fn show_dream_weaver_intro() {
-    println!("╔══════════════════════════════════════════════════════════════╗");
-    println!("║                THE DREAM WEAVER'S HEART                     ║");
-    println!("║              Complete Metaverse Experience                  ║");
-    println!("╚══════════════════════════════════════════════════════════════╝");
-    println!();
-    println!("The cosmic battle for narrative freedom begins in the infinite Metaverse!");
-    println!("Four heroes stand against The One's absolute order...");
-    println!();
-    println!("🎯 GOAL: Transform The One through collaborative storytelling!");
-    println!("Use each character's unique abilities to weave a new reality!");
-    println!();
+        // Update UI with sandbox information (using proper UI methods)
+        // Note: The UI system may need to be updated to support these methods
+        println!("📊 FPS: {:.1}", 1.0 / delta_time);
+        println!("🌍 Sandbox world running smoothly!");
+
+    }, &mut ui)?;
+
+    println!("🌍 Thanks for exploring the Epoch of Elria sandbox world!");
+    println!("👋 See you next time, adventurer!");
+
+    Ok(())
 }
