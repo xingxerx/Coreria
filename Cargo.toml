@@ -10,5 +10,6 @@ default-run = "epoch_of_elria"
 
 
 [dependencies]
+kiss3d = "0.35"
 
 
