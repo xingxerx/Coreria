@@ -5,6 +5,7 @@ edition = "2021"
 authors = ["xingxerx <xingxerx@gmail.com>"]
 description = "Complete Epoch of Elria Game Engine - Combining C++ and Rust components"
 license = "MIT"
+default-run = "epoch_of_elria"
 
 
 
