@@ -13,6 +13,8 @@ pub mod advanced_rendering;
 pub mod game_templates;
 pub mod idle_systems;
 pub mod game_state;
+pub mod feedback_system;
+pub mod code_optimizer;
 
 // Re-export commonly used types
 pub use math::{Vector2D, Vector3D};
@@ -22,6 +24,8 @@ pub use input::InputManager;
 pub use physics::PhysicsWorld;
 pub use scene::Scene;
 pub use ui::UI;
+pub use feedback_system::{FeedbackSystem, PerformanceMetrics};
+pub use code_optimizer::CodeOptimizer;
 use crate::idle_systems::IdleManager;
 use crate::audio::AudioSystem;
 
@@ -63,10 +67,14 @@ pub struct GameEngine {
     physics_world: Option<PhysicsWorld>,
     audio_system: Option<AudioSystem>,
     scene: Scene,
-    idle_manager: IdleManager, // Added IdleManager
+    idle_manager: IdleManager,
+    feedback_system: FeedbackSystem,    // Self-improving feedback system
+    code_optimizer: CodeOptimizer,      // Adaptive code optimization
     running: bool,
     delta_time: f32,
     total_time: f32,
+    frame_count: u64,                   // For performance tracking
+    last_optimization: std::time::Instant, // Track optimization intervals
 }
 
 impl GameEngine {
@@ -84,7 +92,12 @@ impl GameEngine {
             None
         };
         let scene = Scene::new("Main Scene");
-        let idle_manager = IdleManager::new(); // Initialize IdleManager
+        let idle_manager = IdleManager::new();
+        let feedback_system = FeedbackSystem::new();
+        let code_optimizer = CodeOptimizer::new();
+
+        println!("🧠 Self-improving feedback system initialized!");
+        println!("🔧 Adaptive code optimizer ready!");
 
         Ok(Self {
             config,
@@ -93,10 +106,14 @@ impl GameEngine {
             physics_world,
             audio_system,
             scene,
-            idle_manager, // Store IdleManager
+            idle_manager,
+            feedback_system,
+            code_optimizer,
             running: false,
             delta_time: 0.0,
             total_time: 0.0,
+            frame_count: 0,
+            last_optimization: std::time::Instant::now(),
         })
     }
 

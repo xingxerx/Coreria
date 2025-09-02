@@ -19,6 +19,8 @@ anyhow = "1.0"
 rodio = { version = "0.17", optional = true }
 log = "0.4"
 crossterm = "0.27"
+nalgebra = "0.32"
+lazy_static = "1.4"
 
 [features]
 default = []
