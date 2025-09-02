@@ -9,12 +9,7 @@ pub mod audio;
 pub mod scene;
 pub mod ui;
 pub mod game_framework;
-pub mod advanced_rendering;
-pub mod game_templates;
-pub mod idle_systems;
 pub mod game_state;
-pub mod feedback_system;
-pub mod code_optimizer;
 
 // Re-export commonly used types
 pub use math::{Vector2D, Vector3D};
@@ -24,9 +19,6 @@ pub use input::InputManager;
 pub use physics::PhysicsWorld;
 pub use scene::Scene;
 pub use ui::UI;
-pub use feedback_system::{FeedbackSystem, PerformanceMetrics};
-pub use code_optimizer::CodeOptimizer;
-use crate::idle_systems::IdleManager;
 use crate::audio::AudioSystem;
 
 // Engine configuration
@@ -67,14 +59,9 @@ pub struct GameEngine {
     physics_world: Option<PhysicsWorld>,
     audio_system: Option<AudioSystem>,
     scene: Scene,
-    idle_manager: IdleManager,
-    feedback_system: FeedbackSystem,    // Self-improving feedback system
-    code_optimizer: CodeOptimizer,      // Adaptive code optimization
     running: bool,
     delta_time: f32,
     total_time: f32,
-    frame_count: u64,                   // For performance tracking
-    last_optimization: std::time::Instant, // Track optimization intervals
 }
 
 impl GameEngine {
@@ -92,12 +79,6 @@ impl GameEngine {
             None
         };
         let scene = Scene::new("Main Scene");
-        let idle_manager = IdleManager::new();
-        let feedback_system = FeedbackSystem::new();
-        let code_optimizer = CodeOptimizer::new();
-
-        println!("🧠 Self-improving feedback system initialized!");
-        println!("🔧 Adaptive code optimizer ready!");
 
         Ok(Self {
             config,
@@ -106,25 +87,17 @@ impl GameEngine {
             physics_world,
             audio_system,
             scene,
-            idle_manager,
-            feedback_system,
-            code_optimizer,
             running: false,
             delta_time: 0.0,
             total_time: 0.0,
-            frame_count: 0,
-            last_optimization: std::time::Instant::now(),
         })
     }
 
         pub fn update<F>(&mut self, mut update_fn: F, ui: &mut UI) -> Result<(), Box<dyn std::error::Error>>
     where
-        F: FnMut(&mut Scene, &mut IdleManager, &InputManager, f32, &mut UI),
+        F: FnMut(&mut Scene, &InputManager, f32, &mut UI),
     {
         let mut last_time = std::time::Instant::now();
-
-        // Initial update to process offline time before first frame
-        self.idle_manager.update(0.0); // Processes offline time based on saved timestamp
 
         let current_time = std::time::Instant::now();
         self.delta_time = current_time.duration_since(last_time).as_secs_f32();
@@ -134,11 +107,8 @@ impl GameEngine {
         // Handle input
         self.input_manager.update(&mut self.rendering_system);
 
-        // Update idle systems
-        self.idle_manager.update(self.delta_time as f64);
-
-        // Update game logic (now receives IdleManager)
-        update_fn(&mut self.scene, &mut self.idle_manager, &self.input_manager, self.delta_time, ui);
+        // Update game logic
+        update_fn(&mut self.scene, &self.input_manager, self.delta_time, ui);
 
         // Update physics
         if let Some(ref mut physics) = self.physics_world {
@@ -160,8 +130,6 @@ impl GameEngine {
 
         // Save game data on graceful exit
         log::info!("Game loop ended. Saving game data...");
-        self.idle_manager.player_data.record_update_time(); // Ensure timestamp is current before save
-        self.idle_manager.save_game_data();
 
         Ok(())
     }
@@ -171,10 +139,12 @@ impl GameEngine {
         // This method might also be a good place to trigger a save if called.
         if self.running { // Only save if it was running, to prevent saving on initial error perhaps
             log::info!("GameEngine stop called. Saving game data...");
-            self.idle_manager.player_data.record_update_time();
-            self.idle_manager.save_game_data();
         }
         self.running = false;
+    }
+
+    pub fn is_running(&self) -> bool {
+        self.running
     }
 
     pub fn get_delta_time(&self) -> f32 {
@@ -201,10 +171,7 @@ impl GameEngine {
         self.audio_system.as_mut()
     }
 
-    // Getter for IdleManager if direct access is needed outside update_fn
-    pub fn get_idle_manager(&mut self) -> &mut IdleManager {
-        &mut self.idle_manager
-    }
+
 }
 
 // Utility functions

@@ -3,9 +3,8 @@ name = "epoch_of_elria"
 version = "0.1.0"
 edition = "2021"
 authors = ["xingxerx <xingxerx@gmail.com>"]
-description = "Complete Epoch of Elria Game Engine - Combining C++ and Rust components"
+description = "Epoch of Elria - Self-Improving Sandbox Game Engine"
 license = "MIT"
-default-run = "epoch_of_elria"
 
 
 
@@ -21,6 +20,7 @@ log = "0.4"
 crossterm = "0.27"
 nalgebra = "0.32"
 lazy_static = "1.4"
+ctrlc = "3.4"
 
 [features]
 default = []
