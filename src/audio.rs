@@ -322,6 +322,7 @@ impl AudioSystem {
     }
 }
 
+#[cfg(feature = "audio")]
 impl Default for AudioSystem {
     fn default() -> Self {
         Self::new().unwrap_or_else(|_| {
@@ -334,6 +335,21 @@ impl Default for AudioSystem {
                 playing_sounds: Vec::new(),
                 current_music: None,
                 next_sound_id: 0,
+                muted: false,
+            }
+        })
+    }
+}
+
+#[cfg(not(feature = "audio"))]
+impl Default for AudioSystem {
+    fn default() -> Self {
+        Self::new().unwrap_or_else(|_| {
+            println!("Warning: Failed to initialize audio system");
+            Self {
+                master_volume: 1.0,
+                music_volume: 0.7,
+                sfx_volume: 0.8,
                 muted: false,
             }
         })
