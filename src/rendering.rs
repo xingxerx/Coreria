@@ -9,7 +9,6 @@ use kiss3d::light::Light;
 use kiss3d::camera::{ArcBall, FirstPerson, Camera};
 use kiss3d::nalgebra::{Point2, Point3, Vector3};
 use kiss3d::text::Font;
-use std::path::Path;
 
 pub struct RenderingSystem {
     window: Window,

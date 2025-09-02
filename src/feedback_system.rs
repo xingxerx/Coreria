@@ -3,7 +3,6 @@
 
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
-use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Clone)]
 pub struct PerformanceMetrics {

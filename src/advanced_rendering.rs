@@ -1,10 +1,7 @@
 // Advanced Rendering System - Enhanced graphics features
 use crate::math::Vector3D;
-use kiss3d::nalgebra::{Point3, Vector3, Matrix4, Perspective3, Isometry3, Translation3, UnitQuaternion};
-use kiss3d::scene::SceneNode;
+use kiss3d::nalgebra::Matrix4;
 use kiss3d::window::Window;
-use kiss3d::light::Light;
-use kiss3d::camera::{Camera, ArcBall, FirstPerson};
 use std::collections::HashMap;
 
 // Enhanced material system

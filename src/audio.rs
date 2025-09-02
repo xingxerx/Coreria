@@ -1,7 +1,6 @@
 // audio.rs - Audio system for the game engine
 
 use anyhow::Result;
-use std::collections::HashMap;
 
 #[cfg(feature = "audio")]
 use rodio::{Decoder, OutputStream, OutputStreamHandle, Sink, Source};

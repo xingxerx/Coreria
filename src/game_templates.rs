@@ -1,10 +1,8 @@
 // Game Templates - Pre-built game types and mechanics
 use crate::math::Vector3D;
 use crate::game_framework::*;
-use crate::game_objects::{GameObject, Player, Enemy, Collectible, Platform};
 use crate::scene::Scene;
 use crate::input::{InputManager, Key};
-use crate::advanced_rendering::*;
 use std::collections::HashMap;
 
 // Game template types

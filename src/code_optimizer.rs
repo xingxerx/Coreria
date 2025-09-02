@@ -4,7 +4,7 @@
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
-use crate::feedback_system::{PerformanceMetrics, OptimizationSuggestion};
+use crate::feedback_system::PerformanceMetrics;
 
 pub struct CodeOptimizer {
     // Code analysis

@@ -2,7 +2,6 @@
 
 use epoch_of_elria::*;
 use std::error::Error;
-use std::time::Instant;
 
 // Helper function to estimate memory usage (simplified)
 fn get_memory_usage() -> u64 {
