@@ -53,6 +53,16 @@ fn create_base_plate_texture() -> String {
 fn main() -> Result<(), Box<dyn Error>> {
     println!("🌍 Initializing Epoch of Elria - Sandbox Open World...");
 
+    // Check for display environment and set up if needed
+    if std::env::var("DISPLAY").is_err() && std::env::var("WAYLAND_DISPLAY").is_err() {
+        println!("⚠️  No display environment detected. Setting up virtual display...");
+        std::env::set_var("DISPLAY", ":0");
+        println!("💡 If you see graphics errors, try:");
+        println!("   - Install VcXsrv or similar X server on Windows");
+        println!("   - Run: export DISPLAY=:0 before cargo run");
+        println!("   - Use WSL2 with WSLg for native GUI support");
+    }
+
     // Create engine configuration for sandbox world
     let config = EngineConfig {
         window_width: 1600,
@@ -66,10 +76,22 @@ fn main() -> Result<(), Box<dyn Error>> {
         debug_mode: true,
     };
 
-    // Initialize the game engine
-    let mut engine = GameEngine::new(config)?;
-
-    println!("✅ Engine initialized successfully!");
+    // Initialize the game engine with better error handling
+    let mut engine = match GameEngine::new(config) {
+        Ok(engine) => {
+            println!("✅ Game engine initialized successfully!");
+            engine
+        },
+        Err(e) => {
+            println!("❌ Failed to initialize game engine: {}", e);
+            println!("💡 Graphics initialization failed. This is likely due to:");
+            println!("   - Missing X11 server (install VcXsrv on Windows)");
+            println!("   - No DISPLAY environment variable set");
+            println!("   - Missing graphics drivers in WSL");
+            println!("   - Try: wsl --install --web-download for WSLg support");
+            return Err(e);
+        }
+    };
     println!("🌍 Creating sandbox open world...");
 
     // Create UI for sandbox world

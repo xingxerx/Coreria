@@ -1,0 +1,21 @@
+{
+  "resources": {
+    "ResearchPoints": 0.0,
+    "Gold": 0.000029799999538226984,
+    "ElrianShards": 0.0,
+    "ElrianDust": 0.0
+  },
+  "current_epoch": 1,
+  "hero_level": 1,
+  "hero_xp": 0,
+  "hero_skill_points": 0,
+  "last_update_timestamp_secs": 1756831116,
+  "generators": {
+    "gold_mine_1": {
+      "id": "gold_mine_1",
+      "level": 1,
+      "resource_type": "Gold"
+    }
+  },
+  "permanent_bonuses": {}
+}
