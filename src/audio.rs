@@ -1,16 +1,23 @@
 // audio.rs - Audio system for the game engine
 
 use anyhow::Result;
-use rodio::{Decoder, OutputStream, OutputStreamHandle, Sink, Source};
 use std::collections::HashMap;
+
+#[cfg(feature = "audio")]
+use rodio::{Decoder, OutputStream, OutputStreamHandle, Sink, Source};
+#[cfg(feature = "audio")]
 use std::fs::File;
+#[cfg(feature = "audio")]
 use std::io::BufReader;
+#[cfg(feature = "audio")]
 use std::path::Path;
+#[cfg(feature = "audio")]
 use std::sync::{Arc, Mutex};
 
 // Note: This is a placeholder audio system. In a real implementation,
 // you would use a crate like `rodio`, `cpal`, or `kira` for audio playback.
 
+#[cfg(feature = "audio")]
 pub struct AudioSystem {
     master_volume: f32,
     music_volume: f32,
@@ -22,6 +29,15 @@ pub struct AudioSystem {
     muted: bool,
 }
 
+#[cfg(not(feature = "audio"))]
+pub struct AudioSystem {
+    master_volume: f32,
+    music_volume: f32,
+    sfx_volume: f32,
+    muted: bool,
+}
+
+#[cfg(feature = "audio")]
 impl AudioSystem {
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
         Ok(Self {
@@ -514,4 +530,51 @@ mod tests {
         sound.update(1.5);
         assert!(sound.is_finished());
     }
+}
+
+// Stub implementation when audio feature is disabled
+#[cfg(not(feature = "audio"))]
+impl AudioSystem {
+    pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
+        Ok(Self {
+            master_volume: 1.0,
+            music_volume: 0.7,
+            sfx_volume: 0.8,
+            muted: false,
+        })
+    }
+
+    pub fn update(&mut self, _delta_time: f32) {}
+    pub fn load_sound(&mut self, _name: &str, _file_path: &str) -> Result<(), Box<dyn std::error::Error>> { Ok(()) }
+    pub fn unload_sound(&mut self, _name: &str) {}
+    pub fn is_sound_loaded(&self, _name: &str) -> bool { false }
+    pub fn play_sound(&mut self, _name: &str) -> Option<u32> { None }
+    pub fn play_sound_with_volume(&mut self, _name: &str, _volume: f32) -> Option<u32> { None }
+    pub fn play_sound_with_settings(&mut self, _name: &str, _volume: f32, _pitch: f32, _looping: bool) -> Option<u32> { None }
+    pub fn stop_sound(&mut self, _sound_id: u32) {}
+    pub fn stop_all_sounds(&mut self) {}
+    pub fn is_sound_playing(&self, _sound_id: u32) -> bool { false }
+    pub fn play_music(&mut self, _name: &str) -> Result<(), Box<dyn std::error::Error>> { Ok(()) }
+    pub fn play_music_with_settings(&mut self, _name: &str, _looping: bool, _volume: f32) -> Result<(), Box<dyn std::error::Error>> { Ok(()) }
+    pub fn stop_music(&mut self) {}
+    pub fn pause_music(&mut self) {}
+    pub fn resume_music(&mut self) {}
+    pub fn is_music_playing(&self) -> bool { false }
+    pub fn set_master_volume(&mut self, volume: f32) { self.master_volume = volume.clamp(0.0, 1.0); }
+    pub fn set_music_volume(&mut self, volume: f32) { self.music_volume = volume.clamp(0.0, 1.0); }
+    pub fn set_sfx_volume(&mut self, volume: f32) { self.sfx_volume = volume.clamp(0.0, 1.0); }
+    pub fn get_master_volume(&self) -> f32 { self.master_volume }
+    pub fn get_music_volume(&self) -> f32 { self.music_volume }
+    pub fn get_sfx_volume(&self) -> f32 { self.sfx_volume }
+    pub fn mute(&mut self) { self.muted = true; }
+    pub fn unmute(&mut self) { self.muted = false; }
+    pub fn toggle_mute(&mut self) { if self.muted { self.unmute(); } else { self.mute(); } }
+    pub fn is_muted(&self) -> bool { self.muted }
+    pub fn play_sound_3d(&mut self, _name: &str, _position: (f32, f32, f32), _listener_position: (f32, f32, f32)) -> Option<u32> { None }
+    pub fn set_sound_pitch(&mut self, _sound_id: u32, _pitch: f32) {}
+    pub fn set_sound_volume(&mut self, _sound_id: u32, _volume: f32) {}
+    pub fn get_playing_sound_count(&self) -> usize { 0 }
+    pub fn get_loaded_sound_count(&self) -> usize { 0 }
+    pub fn get_loaded_sound_names(&self) -> Vec<String> { Vec::new() }
+    pub fn preload_common_sounds(&mut self) -> Result<(), Box<dyn std::error::Error>> { Ok(()) }
 }

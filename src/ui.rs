@@ -1,5 +1,4 @@
 
-'''
 // src/ui.rs
 
 use crate::input::InputManager;
@@ -48,8 +47,8 @@ impl UI {
     }
 
     pub fn do_button(&mut self, button: UIButton, input: &InputManager) -> bool {
-        let mouse_pos = input.get_mouse_pos();
-        let mouse_clicked = input.is_mouse_button_just_pressed(0); // Assuming 0 is the left mouse button
+        let mouse_pos = input.get_mouse_position();
+        let mouse_clicked = input.is_mouse_button_just_pressed(crate::input::MouseButton::Left);
 
         let is_hovered = mouse_pos.0 >= button.x - button.width / 2.0
             && mouse_pos.0 <= button.x + button.width / 2.0
@@ -61,4 +60,3 @@ impl UI {
         is_hovered && mouse_clicked
     }
 }
-'''

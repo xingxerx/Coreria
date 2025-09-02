@@ -1,4 +1,3 @@
-'''
 // src/game_state.rs
 
 use crate::ui::UIButton;
@@ -84,4 +83,3 @@ impl GameStateContext {
         }
     }
 }
-''
