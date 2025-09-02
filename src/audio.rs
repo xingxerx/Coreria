@@ -356,6 +356,7 @@ impl Default for AudioSystem {
     }
 }
 
+#[cfg(feature = "audio")]
 #[derive(Debug, Clone)]
 pub struct AudioClip {
     pub file_path: String,
@@ -364,6 +365,7 @@ pub struct AudioClip {
     pub channels: u16,
 }
 
+#[cfg(feature = "audio")]
 impl AudioClip {
     pub fn new(file_path: &str) -> Result<Self, Box<dyn std::error::Error>> {
         // In a real implementation, this would load and analyze the audio file
@@ -376,6 +378,7 @@ impl AudioClip {
     }
 }
 
+#[cfg(feature = "audio")]
 #[derive(Debug, Clone)]
 pub struct PlayingSound {
     pub id: u32,
@@ -387,6 +390,7 @@ pub struct PlayingSound {
     pub finished: bool,
 }
 
+#[cfg(feature = "audio")]
 impl PlayingSound {
     pub fn update(&mut self, delta_time: f32) {
         if self.finished {
@@ -478,7 +482,7 @@ impl Default for AudioListener {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "audio"))]
 mod tests {
     use super::*;
 
