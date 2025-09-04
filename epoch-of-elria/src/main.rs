@@ -27,9 +27,9 @@ impl Player {
             node,
             position: start_pos,
             velocity: Vector3::new(0.0, 0.0, 0.0),
-            acceleration: 20.0,  // How quickly we accelerate
-            max_speed: 8.0,      // Maximum horizontal speed
-            friction: 0.85,      // Friction coefficient (0.0 = no friction, 1.0 = instant stop)
+            acceleration: 25.0,  // How quickly we accelerate
+            max_speed: 6.0,      // Maximum horizontal speed
+            friction: 0.88,      // Friction coefficient (0.0 = no friction, 1.0 = instant stop)
             on_ground: false,
         }
     }
@@ -184,7 +184,7 @@ fn main() {
     let mut pressed_keys = HashSet::new();
 
     println!("🎮 Smooth Platformer Controls:");
-    println!("  WASD: Move in all directions (360°)");
+    println!("  WASD or Arrow Keys: Move in all directions (360°)");
     println!("  SPACE: Jump");
     println!("  ESC: Exit");
     println!("🏃 Smooth acceleration & deceleration - try diagonal movement!");
@@ -218,19 +218,20 @@ fn main() {
             }
         }
 
-        // Handle continuous movement
+        // Handle continuous movement - WASD and Arrow Keys
         let mut movement = Vector3::new(0.0, 0.0, 0.0);
 
-        if pressed_keys.contains(&kiss3d::event::Key::W) {
+        // WASD controls
+        if pressed_keys.contains(&kiss3d::event::Key::W) || pressed_keys.contains(&kiss3d::event::Key::Up) {
             movement.z -= 1.0;
         }
-        if pressed_keys.contains(&kiss3d::event::Key::S) {
+        if pressed_keys.contains(&kiss3d::event::Key::S) || pressed_keys.contains(&kiss3d::event::Key::Down) {
             movement.z += 1.0;
         }
-        if pressed_keys.contains(&kiss3d::event::Key::A) {
+        if pressed_keys.contains(&kiss3d::event::Key::A) || pressed_keys.contains(&kiss3d::event::Key::Left) {
             movement.x -= 1.0;
         }
-        if pressed_keys.contains(&kiss3d::event::Key::D) {
+        if pressed_keys.contains(&kiss3d::event::Key::D) || pressed_keys.contains(&kiss3d::event::Key::Right) {
             movement.x += 1.0;
         }
 
