@@ -14,6 +14,9 @@ pub mod environment;
 pub mod scripting;
 pub mod web_ui;
 pub mod native_ui;
+pub mod memory_manager;
+pub mod auto_cleanup;
+pub mod memory_monitor;
 
 // Re-export commonly used types
 pub use math::{Vector2D, Vector3D};
@@ -28,6 +31,10 @@ pub use scripting::{ScriptEngine, Script, ScriptCommand};
 use crate::audio::AudioSystem;
 use crate::web_ui::WebUIServer;
 use crate::native_ui::NativeUIWindow;
+use crate::memory_manager::{GarbageCollector, GCConfig, GameObjectPools};
+use crate::auto_cleanup::AutoCleanupManager;
+use crate::memory_monitor::MemoryMonitor;
+use std::sync::Arc;
 
 // Engine configuration
 #[derive(Debug, Clone)]
@@ -42,6 +49,8 @@ pub struct EngineConfig {
     pub enable_audio: bool,
     pub debug_mode: bool,
     pub console_mode: bool,
+    pub enable_memory_management: bool,
+    pub gc_config: Option<GCConfig>,
 }
 
 impl Default for EngineConfig {
@@ -57,6 +66,8 @@ impl Default for EngineConfig {
             enable_audio: true,
             debug_mode: false,
             console_mode: false,
+            enable_memory_management: true,
+            gc_config: Some(GCConfig::default()),
         }
     }
 }
@@ -76,6 +87,11 @@ pub struct GameEngine {
     running: bool,
     delta_time: f32,
     total_time: f32,
+    // Memory management components
+    garbage_collector: Option<Arc<GarbageCollector>>,
+    cleanup_manager: Option<AutoCleanupManager>,
+    memory_monitor: Option<MemoryMonitor>,
+    object_pools: Option<GameObjectPools>,
 }
 
 impl GameEngine {
@@ -95,6 +111,50 @@ impl GameEngine {
         let scene = Scene::new("Main Scene");
         let environment = Environment::create_forest_environment();
         let script_engine = ScriptEngine::new();
+
+        // Initialize memory management systems
+        let (garbage_collector, cleanup_manager, memory_monitor, object_pools) =
+            if config.enable_memory_management {
+                println!("🗑️  Initializing memory management systems...");
+
+                // Create garbage collector
+                let gc_config = config.gc_config.clone().unwrap_or_default();
+                let mut gc = GarbageCollector::new(gc_config);
+                gc.start();
+                let gc_arc = Arc::new(gc);
+
+                // Create cleanup manager
+                let mut cleanup = AutoCleanupManager::new(std::time::Duration::from_secs(30))
+                    .with_garbage_collector(Arc::clone(&gc_arc));
+                cleanup.start();
+
+                // Create memory monitor
+                let mut monitor = MemoryMonitor::new(crate::memory_monitor::MonitorConfig::default())
+                    .with_garbage_collector(Arc::clone(&gc_arc));
+
+                // Add alert callback for critical memory situations
+                monitor.add_alert_callback(|alert| {
+                    match alert.level {
+                        crate::memory_monitor::AlertLevel::Critical |
+                        crate::memory_monitor::AlertLevel::Emergency => {
+                            println!("🚨 CRITICAL MEMORY ALERT: {}", alert.message);
+                            println!("   Suggested Action: {}", alert.suggested_action);
+                        },
+                        _ => {}
+                    }
+                });
+
+                monitor.start();
+
+                // Create object pools
+                let pools = GameObjectPools::new();
+
+                println!("✅ Memory management systems initialized successfully!");
+
+                (Some(gc_arc), Some(cleanup), Some(monitor), Some(pools))
+            } else {
+                (None, None, None, None)
+            };
 
         // Initialize UI systems
         let web_ui_server = if config.debug_mode {
@@ -136,6 +196,10 @@ impl GameEngine {
             running: false,
             delta_time: 0.0,
             total_time: 0.0,
+            garbage_collector,
+            cleanup_manager,
+            memory_monitor,
+            object_pools,
         })
     }
 
@@ -186,6 +250,26 @@ impl GameEngine {
 
         if let Some(ref native_ui) = self.native_ui_window {
             native_ui.update_game_state(&self.scene, &self.environment, fps);
+        }
+
+        // Memory management updates
+        if let Some(ref gc) = self.garbage_collector {
+            // Check if emergency GC is needed
+            if gc.emergency_gc_needed() {
+                println!("🚨 Emergency garbage collection triggered!");
+                gc.force_gc();
+            }
+        }
+
+        // Print memory status periodically (every 5 seconds at 60 FPS)
+        static mut MEMORY_STATUS_COUNTER: u32 = 0;
+        unsafe {
+            MEMORY_STATUS_COUNTER += 1;
+            if MEMORY_STATUS_COUNTER % 300 == 0 { // Every 5 seconds at 60 FPS
+                if let Some(ref monitor) = self.memory_monitor {
+                    monitor.print_status();
+                }
+            }
         }
 
         // Check for exit conditions
@@ -256,7 +340,43 @@ impl GameEngine {
         &self.rendering_system
     }
 
+    // Memory management getters
+    pub fn get_garbage_collector(&self) -> Option<&Arc<GarbageCollector>> {
+        self.garbage_collector.as_ref()
+    }
 
+    pub fn get_memory_monitor(&self) -> Option<&MemoryMonitor> {
+        self.memory_monitor.as_ref()
+    }
+
+    pub fn get_object_pools(&self) -> Option<&GameObjectPools> {
+        self.object_pools.as_ref()
+    }
+
+    pub fn force_garbage_collection(&self) {
+        if let Some(ref gc) = self.garbage_collector {
+            println!("🗑️  Forcing garbage collection...");
+            gc.force_gc();
+        }
+    }
+
+    pub fn get_memory_stats(&self) -> Option<crate::memory_manager::MemoryStats> {
+        self.garbage_collector.as_ref().map(|gc| gc.get_stats())
+    }
+
+    pub fn cleanup_unused_resources(&self) {
+        if let Some(ref cleanup) = self.cleanup_manager {
+            cleanup.force_cleanup();
+        }
+    }
+
+    pub fn get_memory_pressure(&self) -> f32 {
+        if let Some(ref gc) = self.garbage_collector {
+            gc.get_memory_pressure()
+        } else {
+            0.0
+        }
+    }
 }
 
 // Utility functions

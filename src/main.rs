@@ -68,14 +68,13 @@ fn graceful_shutdown() {
     println!("╚═══════════════════════════════════════════════════════════════════════════════╝\n");
 }
 
-// Helper function to estimate memory usage (simplified)
-fn get_memory_usage() -> u64 {
-    // In a real implementation, this would use system APIs
-    // For now, we'll simulate based on frame count and complexity
-    static mut SIMULATED_MEMORY: u64 = 100 * 1024 * 1024; // Start with 100MB
-    unsafe {
-        SIMULATED_MEMORY += 1024; // Simulate gradual memory growth
-        SIMULATED_MEMORY
+// Helper function to get real memory usage from the engine
+fn get_memory_usage(engine: &GameEngine) -> u64 {
+    if let Some(stats) = engine.get_memory_stats() {
+        stats.current_usage
+    } else {
+        // Fallback to system memory estimation
+        epoch_of_elria::memory_manager::get_system_memory_usage().unwrap_or(128 * 1024 * 1024)
     }
 }
 
@@ -150,6 +149,16 @@ fn main() -> Result<(), Box<dyn Error>> {
         enable_audio: true,    // Enable audio for immersive experience
         debug_mode: true,
         console_mode: false, // Enable graphics mode to show sandbox world
+        enable_memory_management: true, // Enable advanced memory management
+        gc_config: Some(epoch_of_elria::memory_manager::GCConfig {
+            max_heap_size: 2 * 1024 * 1024 * 1024, // 2GB max heap
+            gc_threshold: 0.75, // Trigger GC at 75% usage
+            collection_interval: std::time::Duration::from_secs(15), // GC every 15 seconds
+            enable_auto_gc: true,
+            enable_leak_detection: true,
+            max_object_age: std::time::Duration::from_secs(600), // 10 minutes max age
+            memory_pressure_threshold: 0.9, // Emergency at 90%
+        }),
     };
 
     // Initialize the game engine with better error handling
@@ -471,6 +480,45 @@ fn main() -> Result<(), Box<dyn Error>> {
                         } else {
                             println!("❌ Usage: time <hour> (0.0-24.0)");
                         }
+                        continue;
+                    },
+                    "memory" | "mem" => {
+                        if let Some(monitor) = engine.get_memory_monitor() {
+                            monitor.print_status();
+                            if let Some(stats) = engine.get_memory_stats() {
+                                println!("📊 Detailed Memory Stats:");
+                                println!("   Allocations: {}", stats.allocation_count);
+                                println!("   Deallocations: {}", stats.deallocation_count);
+                                println!("   GC Cycles: {}", stats.gc_cycles);
+                                println!("   Peak Usage: {}", epoch_of_elria::memory_manager::format_memory_size(stats.peak_usage));
+                            }
+                        } else {
+                            println!("❌ Memory management not enabled");
+                        }
+                        continue;
+                    },
+                    "gc" => {
+                        println!("🗑️  Forcing garbage collection...");
+                        engine.force_garbage_collection();
+                        continue;
+                    },
+                    "cleanup" => {
+                        println!("🧹 Forcing resource cleanup...");
+                        engine.cleanup_unused_resources();
+                        continue;
+                    },
+                    "help" => {
+                        println!("📋 Available commands:");
+                        println!("   help - Show this help message");
+                        println!("   env - Show environment info");
+                        println!("   scripts - List available scripts");
+                        println!("   run <script> - Execute a script");
+                        println!("   weather - Change weather");
+                        println!("   time <hour> - Set time of day (0.0-24.0)");
+                        println!("   memory - Show memory status");
+                        println!("   gc - Force garbage collection");
+                        println!("   cleanup - Force resource cleanup");
+                        println!("   exit - Exit the game");
                         continue;
                     },
                     "" => {
