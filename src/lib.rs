@@ -10,6 +10,9 @@ pub mod scene;
 pub mod ui;
 pub mod game_framework;
 pub mod game_state;
+pub mod environment;
+pub mod scripting;
+pub mod web_ui;
 
 // Re-export commonly used types
 pub use math::{Vector2D, Vector3D};
@@ -19,7 +22,10 @@ pub use input::InputManager;
 pub use physics::PhysicsWorld;
 pub use scene::Scene;
 pub use ui::UI;
+pub use environment::Environment;
+pub use scripting::{ScriptEngine, Script, ScriptCommand};
 use crate::audio::AudioSystem;
+use crate::web_ui::WebUIServer;
 
 // Engine configuration
 #[derive(Debug, Clone)]
@@ -33,6 +39,7 @@ pub struct EngineConfig {
     pub enable_physics: bool,
     pub enable_audio: bool,
     pub debug_mode: bool,
+    pub console_mode: bool,
 }
 
 impl Default for EngineConfig {
@@ -47,6 +54,7 @@ impl Default for EngineConfig {
             enable_physics: true,
             enable_audio: true,
             debug_mode: false,
+            console_mode: false,
         }
     }
 }
@@ -59,6 +67,9 @@ pub struct GameEngine {
     physics_world: Option<PhysicsWorld>,
     audio_system: Option<AudioSystem>,
     scene: Scene,
+    environment: Environment,
+    script_engine: ScriptEngine,
+    web_ui_server: Option<WebUIServer>,
     running: bool,
     delta_time: f32,
     total_time: f32,
@@ -79,6 +90,21 @@ impl GameEngine {
             None
         };
         let scene = Scene::new("Main Scene");
+        let environment = Environment::create_forest_environment();
+        let script_engine = ScriptEngine::new();
+
+        // Initialize web UI server
+        let web_ui_server = if config.debug_mode {
+            let server = WebUIServer::new(8080);
+            if let Err(e) = server.start() {
+                println!("⚠️  Failed to start web UI server: {}", e);
+                None
+            } else {
+                Some(server)
+            }
+        } else {
+            None
+        };
 
         Ok(Self {
             config,
@@ -87,6 +113,9 @@ impl GameEngine {
             physics_world,
             audio_system,
             scene,
+            environment,
+            script_engine,
+            web_ui_server,
             running: false,
             delta_time: 0.0,
             total_time: 0.0,
@@ -107,6 +136,14 @@ impl GameEngine {
         // Handle input
         self.input_manager.update(&mut self.rendering_system);
 
+        // Update environment
+        self.environment.update(self.delta_time);
+
+        // Update scripting system
+        if let Some(player) = self.scene.get_player_mut() {
+            self.script_engine.update(self.delta_time, player, &mut self.environment);
+        }
+
         // Update game logic
         update_fn(&mut self.scene, &self.input_manager, self.delta_time, ui);
 
@@ -122,6 +159,12 @@ impl GameEngine {
 
         // Render
         self.rendering_system.render(&self.scene, ui)?;
+
+        // Update web UI with current game state
+        if let Some(ref web_ui) = self.web_ui_server {
+            let fps = if self.delta_time > 0.0 { 1.0 / self.delta_time } else { 60.0 };
+            web_ui.update_game_state(&self.scene, &self.environment, fps);
+        }
 
         // Check for exit conditions
         if self.input_manager.is_key_pressed(input::Key::Escape) {
@@ -159,6 +202,22 @@ impl GameEngine {
         &mut self.scene
     }
 
+    pub fn get_environment(&self) -> &Environment {
+        &self.environment
+    }
+
+    pub fn get_environment_mut(&mut self) -> &mut Environment {
+        &mut self.environment
+    }
+
+    pub fn get_script_engine(&mut self) -> &mut ScriptEngine {
+        &mut self.script_engine
+    }
+
+    pub fn execute_script(&mut self, script_name: &str) -> Result<(), Box<dyn std::error::Error>> {
+        self.script_engine.execute_script(script_name)
+    }
+
     pub fn get_input(&self) -> &InputManager {
         &self.input_manager
     }
@@ -169,6 +228,10 @@ impl GameEngine {
 
     pub fn get_audio(&mut self) -> Option<&mut AudioSystem> {
         self.audio_system.as_mut()
+    }
+
+    pub fn get_rendering_system(&self) -> &RenderingSystem {
+        &self.rendering_system
     }
 
 

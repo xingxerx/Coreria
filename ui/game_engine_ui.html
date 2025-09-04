@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Epoch of Elria - Game Engine UI</title>
+  <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.20.15/babel.min.js"></script>
+  <style>
+    body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .split { display: flex; flex: 1; }
+    .resizable { resize: horizontal; overflow: auto; }
+    .toolbar { background: #1a1a2e; border-bottom: 1px solid #2d2d4b; }
+    .explorer { background: #162447; border-right: 1px solid #2d2d4b; }
+    .editor { background: #0f172a; }
+    .properties { background: #162447; border-left: 1px solid #2d2d4b; }
+    .hover-effect:hover { background: #2d2d4b; }
+    .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #1a1a2e; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #4b5e8e; border-radius: 4px; }
+    .game-viewport {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: 2px solid #4b5e8e;
+      border-radius: 8px;
+    }
+    .status-bar {
+      background: #1a1a2e;
+      border-top: 1px solid #2d2d4b;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+      font-size: 12px;
+      color: #a0a0a0;
+    }
+    .tree-item {
+      padding: 4px 8px;
+      cursor: pointer;
+      border-radius: 4px;
+      margin: 1px 0;
+    }
+    .tree-item:hover {
+      background: #2d2d4b;
+    }
+    .tree-item.selected {
+      background: #4b5e8e;
+    }
+    .icon {
+      width: 16px;
+      height: 16px;
+      margin-right: 8px;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const Toolbar = ({ onAction }) => (
+      <div className="toolbar flex items-center p-2 space-x-2 text-white">
+        <div className="flex items-center space-x-2">
+          <span className="text-lg font-bold text-blue-400">🌟 Epoch of Elria</span>
+          <span className="text-sm text-gray-400">Game Engine</span>
+        </div>
+        <div className="flex space-x-2 ml-4">
+          <button 
+            onClick={() => onAction('new')}
+            className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm"
+          >
+            📁 New Project
+          </button>
+          <button 
+            onClick={() => onAction('save')}
+            className="px-3 py-1 bg-green-600 hover:bg-green-700 rounded text-sm"
+          >
+            💾 Save
+          </button>
+          <button 
+            onClick={() => onAction('run')}
+            className="px-3 py-1 bg-purple-600 hover:bg-purple-700 rounded text-sm"
+          >
+            ▶️ Run Game
+          </button>
+          <button 
+            onClick={() => onAction('build')}
+            className="px-3 py-1 bg-orange-600 hover:bg-orange-700 rounded text-sm"
+          >
+            🔨 Build
+          </button>
+        </div>
+        <div className="flex-1"></div>
+        <div className="flex items-center space-x-2">
+          <input 
+            type="text" 
+            placeholder="Search assets..." 
+            className="px-3 py-1 bg-gray-800 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+          />
+          <div className="text-sm text-green-400">🟢 Engine Running</div>
+        </div>
+      </div>
+    );
+
+    const ProjectExplorer = ({ selectedItem, onSelectItem }) => {
+      const [expandedItems, setExpandedItems] = useState(new Set(['assets', 'scripts', 'scenes']));
+      
+      const toggleExpanded = (item) => {
+        const newExpanded = new Set(expandedItems);
+        if (newExpanded.has(item)) {
+          newExpanded.delete(item);
+        } else {
+          newExpanded.add(item);
+        }
+        setExpandedItems(newExpanded);
+      };
+
+      const projectStructure = [
+        { id: 'assets', name: '📁 Assets', type: 'folder', children: [
+          { id: 'textures', name: '🖼️ Textures', type: 'folder' },
+          { id: 'models', name: '🎭 Models', type: 'folder' },
+          { id: 'audio', name: '🔊 Audio', type: 'folder' },
+          { id: 'materials', name: '✨ Materials', type: 'folder' }
+        ]},
+        { id: 'scripts', name: '📜 Scripts', type: 'folder', children: [
+          { id: 'player_controller', name: 'player_controller.rs', type: 'file' },
+          { id: 'game_logic', name: 'game_logic.rs', type: 'file' },
+          { id: 'ai_behavior', name: 'ai_behavior.rs', type: 'file' }
+        ]},
+        { id: 'scenes', name: '🎬 Scenes', type: 'folder', children: [
+          { id: 'main_scene', name: 'main_scene.json', type: 'file' },
+          { id: 'sandbox_world', name: 'sandbox_world.json', type: 'file' }
+        ]},
+        { id: 'prefabs', name: '🧩 Prefabs', type: 'folder', children: [
+          { id: 'player_prefab', name: 'player.prefab', type: 'file' },
+          { id: 'enemy_prefab', name: 'enemy.prefab', type: 'file' }
+        ]}
+      ];
+
+      const renderTreeItem = (item, level = 0) => {
+        const isExpanded = expandedItems.has(item.id);
+        const isSelected = selectedItem === item.id;
+        
+        return (
+          <div key={item.id}>
+            <div 
+              className={`tree-item ${isSelected ? 'selected' : ''}`}
+              style={{ paddingLeft: `${level * 16 + 8}px` }}
+              onClick={() => {
+                if (item.type === 'folder') {
+                  toggleExpanded(item.id);
+                }
+                onSelectItem(item.id);
+              }}
+            >
+              {item.type === 'folder' && (
+                <span className="text-gray-400 mr-1">
+                  {isExpanded ? '▼' : '▶'}
+                </span>
+              )}
+              {item.name}
+            </div>
+            {item.children && isExpanded && (
+              <div>
+                {item.children.map(child => renderTreeItem(child, level + 1))}
+              </div>
+            )}
+          </div>
+        );
+      };
+
+      return (
+        <div className="explorer w-64 p-4 text-white custom-scrollbar">
+          <h2 className="text-lg font-bold mb-4 text-blue-400">Project Explorer</h2>
+          <div>
+            {projectStructure.map(item => renderTreeItem(item))}
+          </div>
+        </div>
+      );
+    };
+
+    const SceneEditor = ({ gameStatus }) => {
+      const [viewMode, setViewMode] = useState('3d');
+      
+      return (
+        <div className="editor flex-1 flex flex-col">
+          <div className="flex items-center justify-between p-2 bg-gray-800 border-b border-gray-600">
+            <div className="flex space-x-2">
+              <button 
+                onClick={() => setViewMode('3d')}
+                className={`px-3 py-1 rounded text-sm ${viewMode === '3d' ? 'bg-blue-600' : 'bg-gray-700'}`}
+              >
+                🎮 3D View
+              </button>
+              <button 
+                onClick={() => setViewMode('2d')}
+                className={`px-3 py-1 rounded text-sm ${viewMode === '2d' ? 'bg-blue-600' : 'bg-gray-700'}`}
+              >
+                🗺️ 2D View
+              </button>
+              <button 
+                onClick={() => setViewMode('code')}
+                className={`px-3 py-1 rounded text-sm ${viewMode === 'code' ? 'bg-blue-600' : 'bg-gray-700'}`}
+              >
+                💻 Code
+              </button>
+            </div>
+            <div className="text-white text-sm">
+              FPS: <span className="text-green-400">59.0</span> | 
+              Objects: <span className="text-blue-400">42</span>
+            </div>
+          </div>
+          
+          <div className="flex-1 flex items-center justify-center game-viewport m-4">
+            <div className="text-center text-white">
+              <div className="text-6xl mb-4">🌟</div>
+              <h2 className="text-2xl font-bold mb-2">Epoch of Elria</h2>
+              <p className="text-lg mb-4">Sandbox World Viewport</p>
+              <div className="text-sm text-gray-300 space-y-1">
+                <div>🎮 Game Engine: <span className="text-green-400">Running</span></div>
+                <div>🖼️ Renderer: <span className="text-blue-400">Kiss3D + WebGL</span></div>
+                <div>🌍 World: <span className="text-purple-400">Sandbox Open World</span></div>
+                <div>👤 Player: <span className="text-yellow-400">Active</span></div>
+              </div>
+              <div className="mt-6 p-4 bg-black bg-opacity-30 rounded">
+                <p className="text-sm">🚀 WebGL viewport integration coming soon!</p>
+                <p className="text-xs text-gray-400 mt-2">
+                  This will display the live 3D game world from the Rust engine
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    const PropertiesPanel = ({ selectedItem }) => {
+      const [properties, setProperties] = useState({
+        name: 'Player',
+        position: { x: 0, y: 1, z: 0 },
+        rotation: { x: 0, y: 0, z: 0 },
+        scale: { x: 1, y: 1, z: 1 },
+        health: 100,
+        speed: 10.0
+      });
+
+      const updateProperty = (path, value) => {
+        setProperties(prev => {
+          const newProps = { ...prev };
+          const keys = path.split('.');
+          let current = newProps;
+          for (let i = 0; i < keys.length - 1; i++) {
+            current = current[keys[i]];
+          }
+          current[keys[keys.length - 1]] = parseFloat(value) || value;
+          return newProps;
+        });
+      };
+
+      return (
+        <div className="properties w-64 p-4 text-white custom-scrollbar">
+          <h2 className="text-lg font-bold mb-4 text-blue-400">Properties</h2>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">🏷️ Name</label>
+              <input 
+                type="text" 
+                value={properties.name}
+                onChange={(e) => updateProperty('name', e.target.value)}
+                className="w-full px-2 py-1 bg-gray-800 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500" 
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">📍 Position</label>
+              <div className="grid grid-cols-3 gap-2">
+                {['x', 'y', 'z'].map(axis => (
+                  <div key={axis}>
+                    <label className="block text-xs text-gray-400">{axis.toUpperCase()}</label>
+                    <input 
+                      type="number" 
+                      step="0.1"
+                      value={properties.position[axis]}
+                      onChange={(e) => updateProperty(`position.${axis}`, e.target.value)}
+                      className="w-full px-2 py-1 bg-gray-800 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" 
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">🔄 Rotation</label>
+              <div className="grid grid-cols-3 gap-2">
+                {['x', 'y', 'z'].map(axis => (
+                  <div key={axis}>
+                    <label className="block text-xs text-gray-400">{axis.toUpperCase()}</label>
+                    <input 
+                      type="number" 
+                      step="1"
+                      value={properties.rotation[axis]}
+                      onChange={(e) => updateProperty(`rotation.${axis}`, e.target.value)}
+                      className="w-full px-2 py-1 bg-gray-800 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" 
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">📏 Scale</label>
+              <div className="grid grid-cols-3 gap-2">
+                {['x', 'y', 'z'].map(axis => (
+                  <div key={axis}>
+                    <label className="block text-xs text-gray-400">{axis.toUpperCase()}</label>
+                    <input 
+                      type="number" 
+                      step="0.1"
+                      value={properties.scale[axis]}
+                      onChange={(e) => updateProperty(`scale.${axis}`, e.target.value)}
+                      className="w-full px-2 py-1 bg-gray-800 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" 
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">❤️ Health</label>
+              <input 
+                type="number" 
+                value={properties.health}
+                onChange={(e) => updateProperty('health', e.target.value)}
+                className="w-full px-2 py-1 bg-gray-800 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500" 
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">⚡ Speed</label>
+              <input 
+                type="number" 
+                step="0.1"
+                value={properties.speed}
+                onChange={(e) => updateProperty('speed', e.target.value)}
+                className="w-full px-2 py-1 bg-gray-800 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500" 
+              />
+            </div>
+            
+            <div className="pt-4 border-t border-gray-600">
+              <h3 className="text-sm font-medium mb-2 text-green-400">🔧 Actions</h3>
+              <div className="space-y-2">
+                <button className="w-full px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm">
+                  Apply Changes
+                </button>
+                <button className="w-full px-3 py-1 bg-gray-600 hover:bg-gray-700 rounded text-sm">
+                  Reset to Default
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    const StatusBar = ({ gameStatus }) => (
+      <div className="status-bar text-white">
+        <span>Ready</span>
+        <span className="mx-2">|</span>
+        <span>Engine: {gameStatus.engine}</span>
+        <span className="mx-2">|</span>
+        <span>FPS: {gameStatus.fps}</span>
+        <span className="mx-2">|</span>
+        <span>Memory: {gameStatus.memory}MB</span>
+        <div className="flex-1"></div>
+        <span>Epoch of Elria v0.1.0</span>
+      </div>
+    );
+
+    const App = () => {
+      const [selectedItem, setSelectedItem] = useState('main_scene');
+      const [gameStatus, setGameStatus] = useState({
+        engine: 'Running',
+        fps: 59.0,
+        memory: 128
+      });
+
+      const handleToolbarAction = (action) => {
+        console.log(`Toolbar action: ${action}`);
+        // Here you would integrate with the Rust backend
+        switch(action) {
+          case 'run':
+            alert('🎮 Starting game engine...\n\nThis would launch the Rust game engine!');
+            break;
+          case 'save':
+            alert('💾 Saving project...\n\nThis would save the current project state!');
+            break;
+          case 'build':
+            alert('🔨 Building project...\n\nThis would compile the Rust game engine!');
+            break;
+          case 'new':
+            alert('📁 Creating new project...\n\nThis would create a new game project!');
+            break;
+        }
+      };
+
+      // Simulate real-time updates
+      useEffect(() => {
+        const interval = setInterval(() => {
+          setGameStatus(prev => ({
+            ...prev,
+            fps: 58.5 + Math.random() * 1.0,
+            memory: 120 + Math.random() * 20
+          }));
+        }, 1000);
+        
+        return () => clearInterval(interval);
+      }, []);
+
+      return (
+        <div className="h-screen flex flex-col bg-gray-900">
+          <Toolbar onAction={handleToolbarAction} />
+          <div className="split h-full">
+            <ProjectExplorer selectedItem={selectedItem} onSelectItem={setSelectedItem} />
+            <SceneEditor gameStatus={gameStatus} />
+            <PropertiesPanel selectedItem={selectedItem} />
+          </div>
+          <StatusBar gameStatus={gameStatus} />
+        </div>
+      );
+    };
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>

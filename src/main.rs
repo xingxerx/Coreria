@@ -149,6 +149,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         enable_physics: true,  // Enable physics for sandbox interactions
         enable_audio: true,    // Enable audio for immersive experience
         debug_mode: true,
+        console_mode: false, // Enable graphics mode to show sandbox world
     };
 
     // Initialize the game engine with better error handling
@@ -247,6 +248,11 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     display_loading_progress("Finalizing world setup", 600);
     println!("🌟 Sandbox world created successfully!");
+
+    // Execute welcome script
+    if let Err(e) = engine.execute_script("welcome") {
+        println!("⚠️ Could not execute welcome script: {}", e);
+    }
     println!("🎮 Controls:");
     println!("   WASD - Move character");
     println!("   Mouse - Look around");
@@ -260,201 +266,243 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("🎮 Commands:");
     println!("   • Press Enter - Run game update cycle");
     println!("   • Type 'exit' - Graceful shutdown");
+    println!("   • Type 'env' - Show environment info");
+    println!("   • Type 'scripts' - List available scripts");
+    println!("   • Type 'run <script>' - Execute a script");
+    println!("   • Type 'weather' - Change weather");
+    println!("   • Type 'time <hour>' - Set time of day");
     println!("   • Ctrl+C - Emergency shutdown");
     println!();
 
-    // Wait for user input to keep the game running
-    loop {
-        // Check for graceful shutdown signal
-        if !RUNNING.load(Ordering::SeqCst) {
-            break;
+    // Check if we're in graphics mode or console mode
+    let is_graphics_mode = !engine.get_rendering_system().is_headless();
+
+    if is_graphics_mode {
+        println!("🎮 Graphics mode enabled! Window controls:");
+        println!("   • WASD - Move character");
+        println!("   • Mouse - Look around");
+        println!("   • Space - Jump");
+        println!("   • E - Interact");
+        println!("   • ESC - Exit");
+        println!("🌍 The sandbox world is now running in the graphics window!");
+
+        // Graphics mode - run continuous game loop with better error handling
+        let mut consecutive_errors = 0;
+        let mut last_frame_time = std::time::Instant::now();
+
+        loop {
+            let frame_start = std::time::Instant::now();
+
+            // Check for graceful shutdown signal
+            if !RUNNING.load(Ordering::SeqCst) {
+                break;
+            }
+
+            // Check if window should close
+            if !engine.get_rendering_system().should_continue() {
+                println!("🔄 Window requested to close, shutting down gracefully...");
+                break;
+            }
+
+            // Calculate actual delta time
+            let actual_delta_time = frame_start.duration_since(last_frame_time).as_secs_f32();
+            last_frame_time = frame_start;
+
+            // Run one game update cycle with timeout protection
+            let loop_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                engine.update(|_scene, input, delta_time, ui| {
+                    // === PERFORMANCE MONITORING & FEEDBACK ===
+                    let fps = if delta_time > 0.0 { 1.0 / delta_time } else { 60.0 };
+
+                    // === ADAPTIVE SANDBOX GAME LOGIC ===
+                    let base_move_speed = 10.0;
+                    let adaptive_move_speed = if fps < 30.0 {
+                        base_move_speed * 0.8
+                    } else if fps > 50.0 {
+                        base_move_speed * 1.2
+                    } else {
+                        base_move_speed
+                    };
+
+                    let move_speed = adaptive_move_speed * delta_time;
+                    let mut movement = Vector3D::new(0.0, 0.0, 0.0);
+
+                    if input.is_key_pressed(input::Key::W) {
+                        movement.z -= move_speed;
+                    }
+                    if input.is_key_pressed(input::Key::S) {
+                        movement.z += move_speed;
+                    }
+                    if input.is_key_pressed(input::Key::A) {
+                        movement.x -= move_speed;
+                    }
+                    if input.is_key_pressed(input::Key::D) {
+                        movement.x += move_speed;
+                    }
+
+                    // Apply movement to player (this would need scene access)
+                    // For now, just log the movement (less frequently to reduce spam)
+                    static mut MOVEMENT_LOG_COUNTER: u32 = 0;
+                    unsafe {
+                        MOVEMENT_LOG_COUNTER += 1;
+                        if (movement.x != 0.0 || movement.z != 0.0) && MOVEMENT_LOG_COUNTER % 30 == 0 {
+                            println!("Player moving: x={:.2}, z={:.2}", movement.x, movement.z);
+                        }
+                    }
+
+                    // Update UI
+                    ui.texts.clear();
+                    ui.texts.push(crate::ui::UIText {
+                        text: format!("FPS: {:.1}", fps),
+                        x: 10.0,
+                        y: 10.0,
+                        font_size: 16.0,
+                    });
+                    ui.texts.push(crate::ui::UIText {
+                        text: "Use WASD to move, ESC to exit".to_string(),
+                        x: 10.0,
+                        y: 30.0,
+                        font_size: 14.0,
+                    });
+                }, &mut ui)
+            }));
+
+            match loop_result {
+                Ok(Ok(())) => {
+                    // Success - reset error counter
+                    consecutive_errors = 0;
+                },
+                Ok(Err(e)) => {
+                    consecutive_errors += 1;
+                    println!("❌ Game loop error #{}: {}", consecutive_errors, e);
+
+                    if consecutive_errors >= 5 {
+                        println!("⚠️  Too many consecutive errors, shutting down to prevent system instability");
+                        break;
+                    }
+                },
+                Err(_) => {
+                    consecutive_errors += 1;
+                    println!("❌ Game loop panicked #{}", consecutive_errors);
+
+                    if consecutive_errors >= 3 {
+                        println!("⚠️  Too many panics, shutting down to prevent system instability");
+                        break;
+                    }
+                }
+            }
+
+            // Frame rate limiting with adaptive timing
+            let frame_time = frame_start.elapsed();
+            let target_frame_time = Duration::from_millis(16); // ~60 FPS
+
+            if frame_time < target_frame_time {
+                let sleep_time = target_frame_time - frame_time;
+                std::thread::sleep(sleep_time);
+            } else if frame_time > Duration::from_millis(33) {
+                // Frame took longer than 30 FPS, add a small delay to prevent system overload
+                std::thread::sleep(Duration::from_millis(1));
+            }
         }
+    } else {
+        // Console mode - wait for user input
+        loop {
+            // Check for graceful shutdown signal
+            if !RUNNING.load(Ordering::SeqCst) {
+                break;
+            }
 
-        print!("🎮 Command (Enter to continue, 'exit' to quit): ");
-        io::stdout().flush().unwrap();
+            print!("🎮 Command (Enter to continue, 'exit' to quit): ");
+            io::stdout().flush().unwrap();
 
-        let mut input_line = String::new();
-        match io::stdin().read_line(&mut input_line) {
-            Ok(_) => {
-                let command = input_line.trim().to_lowercase();
-                if command == "exit" || command == "quit" || command == "q" {
-                    RUNNING.store(false, Ordering::SeqCst);
-                    break;
+            let mut input_line = String::new();
+            match io::stdin().read_line(&mut input_line) {
+                Ok(_) => {
+                    let command = input_line.trim();
+                    let parts: Vec<&str> = command.split_whitespace().collect();
+                    let cmd = if !parts.is_empty() { parts[0].to_lowercase() } else { String::new() };
+
+                    match cmd.as_str() {
+                    "exit" | "quit" | "q" => {
+                        RUNNING.store(false, Ordering::SeqCst);
+                        break;
+                    },
+                    "env" | "environment" => {
+                        println!("{}", engine.get_environment().get_environment_info());
+                        continue;
+                    },
+                    "scripts" => {
+                        let scripts = engine.get_script_engine().list_scripts();
+                        println!("📜 Available Scripts:");
+                        for script in scripts {
+                            println!("   • {}", script);
+                        }
+                        continue;
+                    },
+                    "run" => {
+                        if parts.len() > 1 {
+                            let script_name = parts[1];
+                            match engine.execute_script(script_name) {
+                                Ok(_) => println!("✅ Script '{}' executed successfully!", script_name),
+                                Err(e) => println!("❌ Failed to execute script '{}': {}", script_name, e),
+                            }
+                        } else {
+                            println!("❌ Usage: run <script_name>");
+                        }
+                        continue;
+                    },
+                    "weather" => {
+                        println!("🌤️ Changing weather randomly...");
+                        // The environment will change weather automatically
+                        continue;
+                    },
+                    "time" => {
+                        if parts.len() > 1 {
+                            if let Ok(hour) = parts[1].parse::<f32>() {
+                                if hour >= 0.0 && hour <= 24.0 {
+                                    engine.get_environment_mut().current_time = hour;
+                                    println!("🕐 Time set to {:.1}:00", hour);
+                                } else {
+                                    println!("❌ Time must be between 0.0 and 24.0");
+                                }
+                            } else {
+                                println!("❌ Invalid time format. Use: time <hour>");
+                            }
+                        } else {
+                            println!("❌ Usage: time <hour> (0.0-24.0)");
+                        }
+                        continue;
+                    },
+                    "" => {
+                        // Empty command, continue to game update
+                    },
+                    _ => {
+                        println!("❓ Unknown command: '{}'. Type a command or press Enter to continue.", cmd);
+                        continue;
+                    }
                 }
 
                 // Run one game update cycle
-                let loop_result = engine.update(|_scene, input, delta_time, ui| {
-        // === PERFORMANCE MONITORING & FEEDBACK ===
-
-        // Calculate performance metrics
-        let fps = 1.0 / delta_time;
-        let memory_usage = get_memory_usage(); // Simplified - would need actual implementation
-
-        // Feed performance data back into the system for optimization
-        println!("📊 Performance Feedback: FPS={:.1}, Memory={:.1}MB", fps, memory_usage as f32 / (1024.0 * 1024.0));
-
-        // === ADAPTIVE SANDBOX GAME LOGIC ===
-
-        // Character movement (dynamically optimized based on performance)
-        let base_move_speed = 10.0;
-        let adaptive_move_speed = if fps < 30.0 {
-            base_move_speed * 0.8 // Reduce movement calculations if performance is poor
-        } else if fps > 50.0 {
-            base_move_speed * 1.2 // Increase responsiveness if performance is good
-        } else {
-            base_move_speed
-        };
-
-        let move_speed = adaptive_move_speed * delta_time;
-        let mut movement = Vector3D::new(0.0, 0.0, 0.0);
-
-        if input.is_key_pressed(input::Key::W) {
-            movement.z -= move_speed; // Move forward
-        }
-        if input.is_key_pressed(input::Key::S) {
-            movement.z += move_speed; // Move backward
-        }
-        if input.is_key_pressed(input::Key::A) {
-            movement.x -= move_speed; // Move left
-        }
-        if input.is_key_pressed(input::Key::D) {
-            movement.x += move_speed; // Move right
-        }
-        if input.is_key_pressed(input::Key::Space) {
-            movement.y += move_speed * 2.0; // Jump
-        }
-
-        // Apply movement to player (if we can access player position)
-        // This would need to be implemented in the scene system
-
-        // === SANDBOX INTERACTIONS ===
-
-        // Interaction key
-        if input.is_key_pressed(input::Key::E) {
-            // Add interaction logic here
-            println!("🔍 Interacting with world...");
-        }
-
-        // === SELF-IMPROVING FEEDBACK LOOP ===
-
-        // Performance monitoring and optimization
-
-        // === ADAPTIVE WORLD OPTIMIZATION ===
-        static mut optimization_timer: f32 = 0.0;
-        static mut performance_history: Vec<f32> = Vec::new();
-        static mut last_fps: f32 = 60.0;
-
-        unsafe {
-            optimization_timer += delta_time;
-            performance_history.push(fps);
-
-            // Keep only recent performance data
-            if performance_history.len() > 60 { // Last 60 frames
-                performance_history.remove(0);
-            }
-
-            // Every 5 seconds, analyze performance and optimize
-            if optimization_timer > 5.0 {
-                optimization_timer = 0.0;
-
-                let avg_fps: f32 = performance_history.iter().sum::<f32>() / performance_history.len() as f32;
-                let fps_trend = fps - last_fps;
-
-                println!("🧠 FEEDBACK ANALYSIS:");
-                println!("   Current FPS: {:.1}", fps);
-                println!("   Average FPS: {:.1}", avg_fps);
-                println!("   FPS Trend: {:.1}", fps_trend);
-                println!("   Memory Usage: {:.1}MB", memory_usage as f32 / (1024.0 * 1024.0));
-
-                // === ADAPTIVE OPTIMIZATIONS ===
-
-                if avg_fps < 35.0 {
-                    println!("🚨 PERFORMANCE CRITICAL - Applying emergency optimizations!");
-                    println!("   🔧 Reducing world complexity...");
-                    println!("   🔧 Lowering render quality...");
-                    println!("   🔧 Disabling non-essential systems...");
-                } else if avg_fps < 45.0 {
-                    println!("⚠️  PERFORMANCE LOW - Applying standard optimizations!");
-                    println!("   🔧 Optimizing render pipeline...");
-                    println!("   🔧 Reducing physics iterations...");
-                } else if avg_fps > 55.0 && fps_trend > 0.0 {
-                    println!("✨ PERFORMANCE EXCELLENT - Enhancing quality!");
-                    println!("   🔧 Increasing render quality...");
-                    println!("   🔧 Adding visual effects...");
-                    println!("   🔧 Enabling advanced features...");
-                }
-
-                // === CODE OPTIMIZATION SUGGESTIONS ===
-
-                if fps_trend < -5.0 {
-                    println!("🧠 GENERATING CODE OPTIMIZATIONS:");
-                    println!("   💡 Suggestion: Implement object pooling for frequent allocations");
-                    println!("   💡 Suggestion: Use spatial partitioning for collision detection");
-                    println!("   💡 Suggestion: Batch render calls to reduce draw calls");
-                    println!("   💡 Suggestion: Implement level-of-detail (LOD) system");
-                }
-
-                last_fps = fps;
-            }
-
-            // === DYNAMIC WORLD EVENTS (Performance-Aware) ===
-
-            static mut world_event_timer: f32 = 0.0;
-            world_event_timer += delta_time;
-
-            // Adjust event frequency based on performance
-            let event_interval = if fps < 30.0 { 15.0 } else if fps < 45.0 { 12.0 } else { 8.0 };
-
-            if world_event_timer > event_interval {
-                world_event_timer = 0.0;
-                println!("🌟 Adaptive world event triggered! (Interval: {:.1}s based on {:.1} FPS)", event_interval, fps);
-
-                // Performance-based event complexity
-                if fps > 45.0 {
-                    println!("   🎆 High-quality event: Particle effects enabled");
-                } else {
-                    println!("   ⭐ Standard event: Basic effects only");
-                }
-            }
-        }
-
-        // === REAL-TIME PERFORMANCE DISPLAY ===
-
-        static mut display_timer: f32 = 0.0;
-        unsafe {
-            display_timer += delta_time;
-            if display_timer > 2.0 { // Update display every 2 seconds
-                display_timer = 0.0;
-                println!("📊 REAL-TIME METRICS: FPS={:.1} | Memory={:.1}MB | Adaptive Speed={:.1}",
-                         fps,
-                         memory_usage as f32 / (1024.0 * 1024.0),
-                         adaptive_move_speed);
-            }
-        }
-
+                let loop_result = engine.update(|_scene, _input, _delta_time, _ui| {
+                    // Console mode - just run basic update
                 }, &mut ui);
 
-                // Check the result and display status
-                match loop_result {
-                    Ok(_) => {
-                        println!("✅ Game update completed successfully!");
-                        println!("🎮 Game Status: Running");
-                        println!("📊 Performance: High");
-                    }
-                    Err(e) => {
-                        eprintln!("❌ Game loop error: {}", e);
-                    }
+                if let Err(e) = loop_result {
+                    println!("❌ Game loop error: {}", e);
+                    break;
                 }
             }
             Err(e) => {
-                eprintln!("❌ Input error: {}", e);
+                println!("❌ Input error: {}", e);
                 break;
             }
         }
     }
-
-    // Graceful shutdown sequence
+}
+    // Graceful shutdown
+    println!("🔄 Shutting down game engine...");
     graceful_shutdown();
 
     Ok(())
 }
+

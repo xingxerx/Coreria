@@ -109,9 +109,8 @@ impl InputManager {
         self.mouse_state.wheel_delta = 0.0;
         
         // Process events from the rendering system
-        let window = rendering_system.window_mut();
-        
-        for event in window.events().iter() {
+        if let Some(window) = rendering_system.window_mut() {
+            for event in window.events().iter() {
             match event.value {
                 kiss3d::event::WindowEvent::Key(key, action, _) => {
                     let mapped_key = self.map_kiss3d_key(key);
@@ -181,6 +180,7 @@ impl InputManager {
                     self.mouse_state.wheel_delta = y as f32;
                 },
                 _ => {},
+            }
             }
         }
     }

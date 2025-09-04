@@ -118,6 +118,15 @@ impl Scene {
         self.objects.get_mut(&id)
     }
 
+    pub fn get_player_mut(&mut self) -> Option<&mut Player> {
+        for object in self.objects.values_mut() {
+            if let Some(player) = object.as_any_mut().downcast_mut::<Player>() {
+                return Some(player);
+            }
+        }
+        None
+    }
+
     pub fn find_object_by_name(&self, name: &str) -> Option<(usize, &dyn GameObject)> {
         self.objects.iter()
             .find(|(_, obj)| obj.get_name() == name)

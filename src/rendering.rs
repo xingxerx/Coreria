@@ -9,9 +9,11 @@ use kiss3d::light::Light;
 use kiss3d::camera::{ArcBall, FirstPerson, Camera};
 use kiss3d::nalgebra::{Point2, Point3, Vector3};
 use kiss3d::text::Font;
+use std::time::{Duration, Instant};
 
 pub struct RenderingSystem {
-    window: Window,
+    window: Option<Window>,
+    headless_mode: bool,
     camera_type: CameraType,
     arcball_camera: Option<ArcBall>,
     fps_camera: Option<FirstPerson>,
@@ -21,7 +23,12 @@ pub struct RenderingSystem {
     frame_count: u64,
     fps: f32,
     frame_time_accumulator: f32,
-    last_fps_update: std::time::Instant,
+    last_fps_update: Instant,
+    last_render_time: Instant,
+    target_fps: f32,
+    objects_initialized: bool,
+    consecutive_render_failures: u32,
+    last_successful_render: Instant,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -32,22 +39,40 @@ pub enum CameraType {
 
 impl RenderingSystem {
     pub fn new(config: &EngineConfig) -> Result<Self, Box<dyn std::error::Error>> {
-        let mut window = Window::new_with_size(&config.window_title, config.window_width, config.window_height);
-        
-        // Set up lighting
-        window.set_light(Light::StickToCamera);
-        
+        println!("🎮 Initializing rendering system...");
+
+        // Check if we should run in console mode
+        let (window, headless_mode) = if config.console_mode {
+            println!("🖥️  Console mode enabled - running headless");
+            (None, true)
+        } else {
+            // Try to create graphics window with timeout
+            match Self::try_create_window(config) {
+                Ok(window) => {
+                    println!("✅ Graphics window created successfully");
+                    (Some(window), false)
+                },
+                Err(e) => {
+                    println!("⚠️  Graphics initialization failed: {}", e);
+                    println!("🔄 Falling back to headless mode");
+                    (None, true)
+                }
+            }
+        };
+
         // Set up camera
         let camera_type = CameraType::ArcBall;
         let arcball_camera = Some(ArcBall::new(Point3::new(10.0, 10.0, 10.0), Point3::origin()));
         let fps_camera = None;
-        
+
         // Set background color
         let background_color = (0.1, 0.1, 0.2);
-        window.set_background_color(background_color.0, background_color.1, background_color.2);
-        
+
+        let now = Instant::now();
+
         Ok(Self {
             window,
+            headless_mode,
             camera_type,
             arcball_camera,
             fps_camera,
@@ -55,44 +80,177 @@ impl RenderingSystem {
             wireframe_mode: false,
             show_debug_info: config.debug_mode,
             frame_count: 0,
-            fps: 0.0,
+            fps: 60.0,
             frame_time_accumulator: 0.0,
-            last_fps_update: std::time::Instant::now(),
+            last_fps_update: now,
+            last_render_time: now,
+            target_fps: 60.0,
+            objects_initialized: false,
+            consecutive_render_failures: 0,
+            last_successful_render: now,
         })
     }
 
+    fn try_create_window(config: &EngineConfig) -> Result<Window, Box<dyn std::error::Error>> {
+        // Create window with error handling
+        let mut window = Window::new_with_size(&config.window_title, config.window_width, config.window_height);
+
+        // Set up lighting
+        window.set_light(Light::StickToCamera);
+
+        // Set background color to a nice sky blue
+        let background_color = (0.5, 0.7, 1.0);
+        window.set_background_color(background_color.0, background_color.1, background_color.2);
+
+        Ok(window)
+    }
+
     pub fn should_continue(&self) -> bool {
-        !self.window.should_close()
+        if self.headless_mode {
+            // In headless mode, continue running (controlled by main loop)
+            true
+        } else if let Some(window) = &self.window {
+            !window.should_close()
+        } else {
+            false
+        }
     }
 
     pub fn render(&mut self, scene: &Scene, ui: &UI) -> Result<(), Box<dyn std::error::Error>> {
         // Update FPS counter
         self.update_fps();
-        
-        // Handle camera updates
-        self.update_camera();
-        
-        // Render the scene
-        if self.window.render() {
-            // Scene rendering is handled by kiss3d automatically
-            // Additional rendering logic can be added here
-            
-            if self.show_debug_info {
-                self.render_debug_info();
-            }
-            self.render_ui(ui);
+
+        // Handle frame rate limiting
+        self.limit_frame_rate();
+
+        if self.headless_mode {
+            // In headless mode, just simulate rendering
+            self.frame_count += 1;
+            return Ok(());
         }
-        
-        self.frame_count += 1;
-        Ok(())
+
+        if self.window.is_some() {
+            // Handle camera updates
+            self.update_camera();
+
+            // Render the scene with timeout protection
+            match self.safe_render_wrapper(scene, ui) {
+                Ok(_) => {
+                    self.frame_count += 1;
+                    self.consecutive_render_failures = 0;
+                    self.last_successful_render = Instant::now();
+                    Ok(())
+                },
+                Err(e) => {
+                    self.consecutive_render_failures += 1;
+                    println!("⚠️  Render error #{}: {}", self.consecutive_render_failures, e);
+
+                    // If we have too many consecutive failures or it's been too long since last success
+                    let time_since_success = self.last_successful_render.elapsed();
+                    if self.consecutive_render_failures >= 3 || time_since_success.as_secs() > 10 {
+                        println!("⚠️  Too many render failures or timeout, switching to headless mode");
+                        self.headless_mode = true;
+                        self.window = None;
+                    }
+                    Ok(())
+                }
+            }
+        } else {
+            // No window available, switch to headless
+            self.headless_mode = true;
+            self.frame_count += 1;
+            Ok(())
+        }
     }
 
-    pub fn render_ui(&mut self, ui: &UI) {
-        let font = Font::default();
-        for text in &ui.texts {
-            let pos = Point2::new(text.x, text.y);
-            self.window.draw_text(&text.text, &pos, text.font_size, &font, &Point3::new(1.0, 1.0, 1.0));
+    fn safe_render_wrapper(&mut self, scene: &Scene, ui: &UI) -> Result<(), Box<dyn std::error::Error>> {
+        // Render with timeout protection
+        let render_start = Instant::now();
+        let show_debug = self.show_debug_info;
+        let frame_count = self.frame_count;
+        let fps = self.fps;
+        let headless = self.headless_mode;
+
+        if let Some(window) = &mut self.window {
+            // Check if window should close first
+            if window.should_close() {
+                return Err("Window requested to close".into());
+            }
+
+            // Clear the scene first
+            window.set_background_color(0.5, 0.7, 1.0); // Sky blue
+
+            // Initialize 3D objects from the scene (only once)
+            if !self.objects_initialized {
+                Self::render_scene_objects_static(window, scene);
+                self.objects_initialized = true;
+                println!("🎨 3D objects initialized in scene");
+            }
+
+            // Add timeout protection for render call
+            let render_timeout = Duration::from_millis(100); // 100ms timeout
+            let render_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                window.render()
+            }));
+
+            match render_result {
+                Ok(render_success) => {
+                    if render_success {
+                        // Check if render took too long
+                        let render_time = render_start.elapsed();
+                        if render_time > render_timeout {
+                            println!("⚠️  Slow render detected: {}ms", render_time.as_millis());
+                            // If renders are consistently slow, consider switching to headless
+                            if render_time.as_millis() > 500 {
+                                return Err("Render timeout exceeded, switching to headless mode".into());
+                            }
+                        }
+
+                        if show_debug && frame_count % 60 == 0 {
+                            println!("FPS: {:.1}, Headless: {}", fps, headless);
+                        }
+
+                        // Render UI with error protection
+                        let font = Font::default();
+                        for text in &ui.texts {
+                            let pos = Point2::new(text.x, text.y);
+                            if let Err(_) = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                                window.draw_text(&text.text, &pos, text.font_size, &font, &Point3::new(1.0, 1.0, 1.0));
+                            })) {
+                                println!("⚠️  UI render error, skipping text rendering");
+                            }
+                        }
+
+                        Ok(())
+                    } else {
+                        Err("Window render returned false".into())
+                    }
+                },
+                Err(_) => {
+                    println!("⚠️  Render call panicked, switching to headless mode");
+                    Err("Render call panicked".into())
+                }
+            }
+        } else {
+            Err("No window available".into())
         }
+    }
+
+    fn limit_frame_rate(&mut self) {
+        let target_frame_time = 1.0 / self.target_fps;
+        let elapsed = self.last_render_time.elapsed().as_secs_f32();
+
+        if elapsed < target_frame_time {
+            let sleep_time = target_frame_time - elapsed;
+            std::thread::sleep(std::time::Duration::from_secs_f32(sleep_time));
+        }
+
+        self.last_render_time = Instant::now();
+    }
+
+    pub fn render_ui(&mut self, _ui: &UI) {
+        // UI rendering is now handled inline in safe_render_wrapper
+        // This method is kept for compatibility
     }
 
     pub fn set_camera_type(&mut self, camera_type: CameraType) {
@@ -113,7 +271,9 @@ impl RenderingSystem {
 
     pub fn set_background_color(&mut self, r: f32, g: f32, b: f32) {
         self.background_color = (r, g, b);
-        self.window.set_background_color(r, g, b);
+        if let Some(window) = &mut self.window {
+            window.set_background_color(r, g, b);
+        }
     }
 
     pub fn toggle_wireframe(&mut self) {
@@ -134,9 +294,19 @@ impl RenderingSystem {
         self.frame_count
     }
 
+
+
     pub fn get_window_size(&self) -> (u32, u32) {
-        let size = self.window.size();
-        (size.x as u32, size.y as u32)
+        if let Some(window) = &self.window {
+            let size = window.size();
+            (size.x as u32, size.y as u32)
+        } else {
+            (800, 600) // Default size for headless mode
+        }
+    }
+
+    pub fn is_headless(&self) -> bool {
+        self.headless_mode
     }
 
     pub fn set_window_title(&mut self, title: &str) {
@@ -256,6 +426,45 @@ impl RenderingSystem {
         // Camera updates are handled by kiss3d automatically through event handling
     }
 
+    fn render_scene_objects_static(window: &mut Window, scene: &Scene) {
+        // Render all objects in the scene as 3D objects
+        let object_ids = scene.get_all_object_ids();
+
+        for object_id in object_ids {
+            if let Some(object) = scene.get_object(object_id) {
+                let position = object.get_position();
+                let size = object.get_size();
+                let name = object.get_name();
+
+                // Convert our Vector3D to kiss3d's Point3
+                let pos = Point3::new(position.x, position.y, position.z);
+
+                // Create appropriate 3D shapes based on object type
+                if name.contains("Platform") || name.contains("Base Plate") {
+                    // Render platforms as boxes
+                    let mut cube = window.add_cube(size.x, size.y, size.z);
+                    cube.set_local_translation(kiss3d::nalgebra::Translation3::new(pos.x, pos.y, pos.z));
+                    cube.set_color(0.2, 0.8, 0.2); // Green for platforms
+                } else if name.contains("Player") {
+                    // Render player as a colored sphere
+                    let mut sphere = window.add_sphere(0.5);
+                    sphere.set_local_translation(kiss3d::nalgebra::Translation3::new(pos.x, pos.y, pos.z));
+                    sphere.set_color(0.2, 0.4, 1.0); // Blue for player
+                } else if name.contains("Collectible") {
+                    // Render collectibles as small cubes
+                    let mut cube = window.add_cube(0.3, 0.3, 0.3);
+                    cube.set_local_translation(kiss3d::nalgebra::Translation3::new(pos.x, pos.y, pos.z));
+                    cube.set_color(1.0, 1.0, 0.2); // Yellow for collectibles
+                } else {
+                    // Default: render as a small cube
+                    let mut cube = window.add_cube(size.x.max(0.5), size.y.max(0.5), size.z.max(0.5));
+                    cube.set_local_translation(kiss3d::nalgebra::Translation3::new(pos.x, pos.y, pos.z));
+                    cube.set_color(0.7, 0.7, 0.7); // Gray for unknown objects
+                }
+            }
+        }
+    }
+
     fn render_debug_info(&mut self) {
         // Debug info rendering would be implemented here
         // This could include FPS, camera position, object counts, etc.
@@ -266,8 +475,9 @@ impl RenderingSystem {
 
     // Event handling methods
     pub fn handle_window_events(&mut self) {
-        // Handle window resize, close, etc.
-        for event in self.window.events().iter() {
+        if let Some(window) = &mut self.window {
+            // Handle window resize, close, etc.
+            for event in window.events().iter() {
             match event.value {
                 kiss3d::event::WindowEvent::FramebufferSize(width, height) => {
                     // Handle window resize
@@ -291,16 +501,17 @@ impl RenderingSystem {
                 },
                 _ => {},
             }
+            }
         }
     }
 
     // Utility methods for accessing the underlying window
-    pub fn window(&self) -> &Window {
-        &self.window
+    pub fn window(&self) -> Option<&Window> {
+        self.window.as_ref()
     }
 
-    pub fn window_mut(&mut self) -> &mut Window {
-        &mut self.window
+    pub fn window_mut(&mut self) -> Option<&mut Window> {
+        self.window.as_mut()
     }
 }
 

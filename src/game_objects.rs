@@ -67,19 +67,19 @@ impl BoundingBox {
 
 // Player implementation
 pub struct Player {
-    name: String,
-    id: usize,
-    position: Vector3D,
-    velocity: Vector3D,
-    acceleration: Vector3D,
-    speed: f32,
-    jump_force: f32,
-    active: bool,
-    grounded: bool,
-    health: i32,
-    max_health: i32,
-    scene_node: Option<SceneNode>,
-    size: Vector3D,
+    pub name: String,
+    pub id: usize,
+    pub position: Vector3D,
+    pub velocity: Vector3D,
+    pub acceleration: Vector3D,
+    pub speed: f32,
+    pub jump_force: f32,
+    pub active: bool,
+    pub grounded: bool,
+    pub health: i32,
+    pub max_health: i32,
+    pub scene_node: Option<SceneNode>,
+    pub size: Vector3D,
 }
 
 impl Player {
