@@ -13,6 +13,7 @@ pub mod game_state;
 pub mod environment;
 pub mod scripting;
 pub mod web_ui;
+pub mod native_ui;
 
 // Re-export commonly used types
 pub use math::{Vector2D, Vector3D};
@@ -26,6 +27,7 @@ pub use environment::Environment;
 pub use scripting::{ScriptEngine, Script, ScriptCommand};
 use crate::audio::AudioSystem;
 use crate::web_ui::WebUIServer;
+use crate::native_ui::NativeUIWindow;
 
 // Engine configuration
 #[derive(Debug, Clone)]
@@ -70,6 +72,7 @@ pub struct GameEngine {
     environment: Environment,
     script_engine: ScriptEngine,
     web_ui_server: Option<WebUIServer>,
+    native_ui_window: Option<NativeUIWindow>,
     running: bool,
     delta_time: f32,
     total_time: f32,
@@ -93,7 +96,7 @@ impl GameEngine {
         let environment = Environment::create_forest_environment();
         let script_engine = ScriptEngine::new();
 
-        // Initialize web UI server
+        // Initialize UI systems
         let web_ui_server = if config.debug_mode {
             let server = WebUIServer::new(8080);
             if let Err(e) = server.start() {
@@ -101,6 +104,19 @@ impl GameEngine {
                 None
             } else {
                 Some(server)
+            }
+        } else {
+            None
+        };
+
+        // Initialize native UI window
+        let native_ui_window = if config.debug_mode {
+            let window = NativeUIWindow::new();
+            if let Err(e) = window.start() {
+                println!("⚠️  Failed to start native UI window: {}", e);
+                None
+            } else {
+                Some(window)
             }
         } else {
             None
@@ -116,6 +132,7 @@ impl GameEngine {
             environment,
             script_engine,
             web_ui_server,
+            native_ui_window,
             running: false,
             delta_time: 0.0,
             total_time: 0.0,
@@ -160,10 +177,15 @@ impl GameEngine {
         // Render
         self.rendering_system.render(&self.scene, ui)?;
 
-        // Update web UI with current game state
+        // Update UI systems with current game state
+        let fps = if self.delta_time > 0.0 { 1.0 / self.delta_time } else { 60.0 };
+
         if let Some(ref web_ui) = self.web_ui_server {
-            let fps = if self.delta_time > 0.0 { 1.0 / self.delta_time } else { 60.0 };
             web_ui.update_game_state(&self.scene, &self.environment, fps);
+        }
+
+        if let Some(ref native_ui) = self.native_ui_window {
+            native_ui.update_game_state(&self.scene, &self.environment, fps);
         }
 
         // Check for exit conditions
