@@ -1,6 +1,6 @@
 use kiss3d::window::Window;
 use kiss3d::light::Light;
-use kiss3d::nalgebra::{Vector3, Translation3};
+use kiss3d::nalgebra::{Vector3, Translation3, UnitQuaternion};
 use kiss3d::scene::SceneNode;
 use std::collections::HashSet;
 
@@ -8,6 +8,9 @@ struct Player {
     node: SceneNode,
     position: Vector3<f32>,
     velocity: Vector3<f32>,
+    acceleration: f32,
+    max_speed: f32,
+    friction: f32,
     on_ground: bool,
 }
 
@@ -24,6 +27,9 @@ impl Player {
             node,
             position: start_pos,
             velocity: Vector3::new(0.0, 0.0, 0.0),
+            acceleration: 20.0,  // How quickly we accelerate
+            max_speed: 8.0,      // Maximum horizontal speed
+            friction: 0.85,      // Friction coefficient (0.0 = no friction, 1.0 = instant stop)
             on_ground: false,
         }
     }
@@ -53,9 +59,43 @@ impl Player {
         }
     }
 
-    fn move_horizontal(&mut self, direction: Vector3<f32>, speed: f32) {
-        self.velocity.x = direction.x * speed;
-        self.velocity.z = direction.z * speed;
+    fn move_horizontal(&mut self, direction: Vector3<f32>, delta_time: f32) {
+        if direction.magnitude() > 0.0 {
+            // Apply acceleration in the desired direction
+            let normalized_direction = direction.normalize();
+            self.velocity.x += normalized_direction.x * self.acceleration * delta_time;
+            self.velocity.z += normalized_direction.z * self.acceleration * delta_time;
+
+            // Limit to max speed
+            let horizontal_speed = (self.velocity.x * self.velocity.x + self.velocity.z * self.velocity.z).sqrt();
+            if horizontal_speed > self.max_speed {
+                let scale = self.max_speed / horizontal_speed;
+                self.velocity.x *= scale;
+                self.velocity.z *= scale;
+            }
+
+            // Rotate player to face movement direction
+            self.face_direction(normalized_direction);
+        } else {
+            // Apply friction when no input
+            self.velocity.x *= self.friction;
+            self.velocity.z *= self.friction;
+
+            // Stop very small movements to prevent jitter
+            if self.velocity.x.abs() < 0.01 {
+                self.velocity.x = 0.0;
+            }
+            if self.velocity.z.abs() < 0.01 {
+                self.velocity.z = 0.0;
+            }
+        }
+    }
+
+    fn face_direction(&mut self, direction: Vector3<f32>) {
+        // Calculate rotation angle from direction vector
+        let angle = direction.z.atan2(direction.x);
+        // Apply rotation to the visual node
+        self.node.set_local_rotation(UnitQuaternion::from_axis_angle(&Vector3::y_axis(), angle));
     }
 
     fn check_platform_collision(&mut self, platforms: &[Platform]) {
@@ -101,7 +141,7 @@ fn main() {
     let mut platforms = Vec::new();
 
     // Ground platform (large)
-    let ground_node = window.add_cube(20.0, 0.5, 20.0);
+    let mut ground_node = window.add_cube(20.0, 0.5, 20.0);
     ground_node.set_color(0.3, 0.8, 0.3); // Green ground
     platforms.push(Platform::new(
         ground_node,
@@ -110,7 +150,7 @@ fn main() {
     ));
 
     // Floating platforms
-    let platform1_node = window.add_cube(4.0, 0.5, 4.0);
+    let mut platform1_node = window.add_cube(4.0, 0.5, 4.0);
     platform1_node.set_color(0.8, 0.6, 0.2); // Orange platform
     platforms.push(Platform::new(
         platform1_node,
@@ -118,7 +158,7 @@ fn main() {
         Vector3::new(4.0, 0.5, 4.0)
     ));
 
-    let platform2_node = window.add_cube(3.0, 0.5, 3.0);
+    let mut platform2_node = window.add_cube(3.0, 0.5, 3.0);
     platform2_node.set_color(0.6, 0.2, 0.8); // Purple platform
     platforms.push(Platform::new(
         platform2_node,
@@ -126,7 +166,7 @@ fn main() {
         Vector3::new(3.0, 0.5, 3.0)
     ));
 
-    let platform3_node = window.add_cube(2.5, 0.5, 2.5);
+    let mut platform3_node = window.add_cube(2.5, 0.5, 2.5);
     platform3_node.set_color(0.2, 0.6, 0.8); // Blue platform
     platforms.push(Platform::new(
         platform3_node,
@@ -135,19 +175,19 @@ fn main() {
     ));
 
     // Create player
-    let player_node = window.add_cube(0.5, 0.5, 0.5);
+    let mut player_node = window.add_cube(0.5, 0.5, 0.5);
     player_node.set_color(0.8, 0.2, 0.2); // Red player
     let mut player = Player::new(player_node, Vector3::new(0.0, 5.0, 0.0));
 
-    let move_speed = 5.0;
+
     let mut last_time = std::time::Instant::now();
     let mut pressed_keys = HashSet::new();
 
-    println!("🎮 Platformer controls:");
-    println!("  WASD: Move horizontally");
+    println!("🎮 Smooth Platformer Controls:");
+    println!("  WASD: Move in all directions (360°)");
     println!("  SPACE: Jump");
     println!("  ESC: Exit");
-    println!("🏃 Try jumping between the colored platforms!");
+    println!("🏃 Smooth acceleration & deceleration - try diagonal movement!");
 
     while window.render() {
         // Calculate delta time
@@ -172,7 +212,6 @@ fn main() {
                         kiss3d::event::Action::Release => {
                             pressed_keys.remove(&key);
                         }
-                        _ => {}
                     }
                 }
                 _ => {}
@@ -195,15 +234,8 @@ fn main() {
             movement.x += 1.0;
         }
 
-        // Apply movement
-        if movement.magnitude() > 0.0 {
-            movement = movement.normalize();
-            player.move_horizontal(movement, move_speed);
-        } else {
-            // Apply friction when not moving
-            player.velocity.x *= 0.8;
-            player.velocity.z *= 0.8;
-        }
+        // Apply smooth movement with acceleration
+        player.move_horizontal(movement, delta_time);
 
         // Update physics
         player.check_platform_collision(&platforms);

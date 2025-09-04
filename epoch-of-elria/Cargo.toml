@@ -2,17 +2,45 @@
 name = "epoch_of_elria"
 version = "0.1.0"
 edition = "2021"
-authors = ["xingxerx <xingxer@gmail.com>"]
-description = "A simple 3D game engine ported from C++ to Rust"
+authors = ["xingxerx <xingxerx@gmail.com>"]
+description = "Advanced 3D game engine with memory management, real-time graphics, physics simulation, and immersive audio"
 license = "MIT"
+repository = "https://github.com/xingxerx/Epoch-of-Elria"
+homepage = "https://github.com/xingxerx/Epoch-of-Elria"
+documentation = "https://docs.rs/epoch_of_elria"
+keywords = ["game", "engine", "3d", "graphics", "physics"]
+categories = ["games", "graphics", "multimedia"]
 
 [dependencies]
+# 3D Graphics and rendering
 kiss3d = "0.35"
+nalgebra = "0.30"
+
+# Math and utilities
 rand = "0.8"
+
+# Logging and CLI
 env_logger = "0.10"
 log = "0.4"
-clap = { version = "4.1", features = ["derive"] }
+clap = { version = "4.5", features = ["derive"] }
+
+# Serialization
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 toml = "0.7"
-winit = "0.29" # Use the latest stable version
+
+# Audio system
+rodio = "0.17"
+
+# Physics (collision detection)
+ncollide3d = "0.33"
+
+# Web server for debugging UI
+warp = "0.3"
+tokio = { version = "1.0", features = ["full"] }
+
+# Window management
+winit = "0.29"
+
+[dev-dependencies]
+criterion = "0.5"
