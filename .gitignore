@@ -1,1 +1,82 @@
+# Rust build artifacts
 /target/
+**/target/
+Cargo.lock
+
+# Debug builds
+debug/
+release/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Windows
+*.exe
+*.pdb
+*.dll
+*.lib
+*.obj
+
+# Compiled binaries
+dream_weaver_complete.exe
+dream_weaver_complete
+earth_sphere_game
+game_engine_parallel_demo
+game_engine_simple_graphics
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# Build directories
+build/
+dist/
+out/
+
+# Package files
+*.tar.gz
+*.zip
+*.rar
+
+# Editor backups
+*.bak
+*.orig
+
+# Rust specific
+**/*.rs.bk
+*.pdb
+
+# C++ build artifacts
+*.o
+*.a
+*.so
+*.dylib
+
+# Game engine generated files
+game_frame_*.svg
+
+# Large media files (if any)
+*.mp4
+*.avi
+*.mov
+*.wav
+*.mp3
+*.ogg
+
+# Shader compilation cache
+*.spv
+*.spirv
