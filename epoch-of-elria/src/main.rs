@@ -5,6 +5,12 @@ use kiss3d::scene::SceneNode;
 use std::collections::HashSet;
 use std::time::{Duration, Instant};
 
+mod world;
+mod renderer;
+
+use world::{World, BlockType};
+use renderer::OptimizedBlockRenderer;
+
 struct Player {
     node: SceneNode,
     position: Vector3<f32>,
@@ -189,28 +195,50 @@ impl Player {
         self.node.set_local_rotation(UnitQuaternion::from_axis_angle(&Vector3::y_axis(), angle));
     }
 
-    fn check_platform_collision(&mut self, platforms: &[Platform]) {
+    fn check_world_collision(&mut self, world: &World) {
         self.on_ground = false;
 
-        for platform in platforms {
-            // Simple AABB collision detection
-            let player_half_size = 0.25; // Half the player cube size
+        // Check collision with blocks below player
+        let player_bottom = self.position.y - 0.25;
+        let check_y = player_bottom.floor() as i32;
 
-            // Check if player is above platform and falling
-            if self.velocity.y <= 0.0 &&
-               self.position.x + player_half_size > platform.position.x - platform.size.x/2.0 &&
-               self.position.x - player_half_size < platform.position.x + platform.size.x/2.0 &&
-               self.position.z + player_half_size > platform.position.z - platform.size.z/2.0 &&
-               self.position.z - player_half_size < platform.position.z + platform.size.z/2.0 &&
-               self.position.y > platform.position.y + platform.size.y/2.0 &&
-               self.position.y - player_half_size <= platform.position.y + platform.size.y/2.0 + 0.1 {
+        // Check multiple points around player's base
+        let check_points = [
+            (self.position.x - 0.2, check_y as f32, self.position.z - 0.2),
+            (self.position.x + 0.2, check_y as f32, self.position.z - 0.2),
+            (self.position.x - 0.2, check_y as f32, self.position.z + 0.2),
+            (self.position.x + 0.2, check_y as f32, self.position.z + 0.2),
+            (self.position.x, check_y as f32, self.position.z),
+        ];
 
-                // Land on platform
-                self.position.y = platform.position.y + platform.size.y/2.0 + player_half_size;
+        for (x, y, z) in check_points.iter() {
+            if world.is_solid_at(*x, *y, *z) {
+                // Found solid ground
+                self.position.y = y + 1.25; // Block height + player half-height
                 self.velocity.y = 0.0;
                 self.on_ground = true;
                 break;
             }
+        }
+
+        // Check horizontal collisions
+        let next_x = self.position.x + self.velocity.x * 0.016; // Predict next position
+        let next_z = self.position.z + self.velocity.z * 0.016;
+
+        // Check X collision
+        if world.is_solid_at(next_x, self.position.y, self.position.z) {
+            self.velocity.x = 0.0;
+        }
+
+        // Check Z collision
+        if world.is_solid_at(self.position.x, self.position.y, next_z) {
+            self.velocity.z = 0.0;
+        }
+
+        // Check head collision
+        let head_y = self.position.y + 0.25;
+        if world.is_solid_at(self.position.x, head_y, self.position.z) && self.velocity.y > 0.0 {
+            self.velocity.y = 0.0;
         }
     }
 }
@@ -291,57 +319,24 @@ impl Platform {
 }
 
 fn main() {
-    println!("🌟 EPOCH OF ELRIA - Enhanced Platformer Edition");
+    println!("🌟 CORERIA EVERYTHING TM - Enhanced Platformer Edition");
     println!("🎮 Use WASD/Arrow Keys to move, SPACE to jump, ESC to exit");
 
-    let mut window = Window::new("Epoch of Elria - Enhanced Platformer");
+    let mut window = Window::new("Coreria everything TM - Enhanced Platformer");
     window.set_light(Light::StickToCamera);
 
     // Initialize time system and UI
     let time_system = TimeSystem::new();
     let game_ui = GameUI::new();
 
-    // Create platforms
-    let mut platforms = Vec::new();
-
-    // Ground platform (large) - Deep blue base
-    let mut ground_node = window.add_cube(20.0, 0.5, 20.0);
-    ground_node.set_color(DEEP_BLUE.0, DEEP_BLUE.1, DEEP_BLUE.2);
-    platforms.push(Platform::new(
-        ground_node,
-        Vector3::new(0.0, -2.0, 0.0),
-        Vector3::new(20.0, 0.5, 20.0)
-    ));
-
-    // Floating platforms with Epoch of Elria palette
-    let mut platform1_node = window.add_cube(4.0, 0.5, 4.0);
-    platform1_node.set_color(NEON_ORANGE.0, NEON_ORANGE.1, NEON_ORANGE.2); // Neon orange
-    platforms.push(Platform::new(
-        platform1_node,
-        Vector3::new(5.0, 0.0, 0.0),
-        Vector3::new(4.0, 0.5, 4.0)
-    ));
-
-    let mut platform2_node = window.add_cube(3.0, 0.5, 3.0);
-    platform2_node.set_color(NEON_BLUE.0, NEON_BLUE.1, NEON_BLUE.2); // Neon blue
-    platforms.push(Platform::new(
-        platform2_node,
-        Vector3::new(-4.0, 2.0, 3.0),
-        Vector3::new(3.0, 0.5, 3.0)
-    ));
-
-    let mut platform3_node = window.add_cube(2.5, 0.5, 2.5);
-    platform3_node.set_color(0.5, 0.3, 0.8); // Purple accent
-    platforms.push(Platform::new(
-        platform3_node,
-        Vector3::new(2.0, 4.0, -5.0),
-        Vector3::new(2.5, 0.5, 2.5)
-    ));
+    // Initialize procedural world system
+    let mut world = World::new(12345); // Fixed seed for consistent world
+    let mut block_renderer = OptimizedBlockRenderer::new();
 
     // Create player with dynamic neon glow
     let mut player_node = window.add_cube(0.5, 0.5, 0.5);
     player_node.set_color(NEON_ORANGE.0, NEON_ORANGE.1 * 0.8, NEON_ORANGE.2 * 0.3); // Neon orange glow
-    let mut player = Player::new(player_node, Vector3::new(0.0, 5.0, 0.0));
+    let mut player = Player::new(player_node, Vector3::new(0.0, 80.0, 0.0)); // Spawn high above terrain
 
     // Add some atmospheric elements
     let mut energy_orbs = Vec::new();
@@ -369,6 +364,12 @@ fn main() {
 
         // Update time system and get current time info
         let time_info = time_system.get_time_info();
+
+        // Update procedural world around player
+        world.update_chunks(player.position);
+
+        // Update block rendering
+        block_renderer.update_rendering(&world, &mut window, player.position);
 
         // Apply dynamic lighting based on day/night cycle
         apply_atmospheric_lighting(&mut window, &time_info);
@@ -420,21 +421,20 @@ fn main() {
         player.move_horizontal(movement, delta_time);
 
         // Update physics
-        player.check_platform_collision(&platforms);
+        player.check_world_collision(&world);
         player.update(delta_time);
 
         // Render UI elements (clock and minimap info)
         if time_info.total_elapsed - last_ui_update >= 1.0 {
             game_ui.render_clock(&mut window, &time_info);
-            game_ui.render_minimap(&mut window, player.position, &platforms);
+            // Skip minimap for now - will implement block-based minimap later
             last_ui_update = time_info.total_elapsed;
         }
 
         // Reset if player falls too far
         if player.position.y < -10.0 {
-            player.position = Vector3::new(0.0, 5.0, 0.0);
+            player.position = Vector3::new(0.0, 80.0, 0.0);
             player.velocity = Vector3::new(0.0, 0.0, 0.0);
-            println!("💀 Respawned! Try again!");
         }
     }
 

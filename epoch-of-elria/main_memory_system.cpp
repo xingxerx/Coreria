@@ -32,8 +32,8 @@ public:
         xerx = std::unique_ptr<Xerx>(new Xerx(Vector3D(10, 2, 0)));
         heart = std::unique_ptr<TheHeart>(new TheHeart(Vector3D(5, 3, 5)));
 
-        std::cout << "\n🧠 THE DREAM WEAVER'S HEART - MEMORY SYSTEM 🧠\n";
-        std::cout << "Where forgotten memories hold the key to liberation!\n\n";
+        std::cout << "\n🧠 Coreria everything TM - MEMORY SYSTEM 🧠\n";
+        std::cout << "Where forgotten memories hold the key to liberation! TM\n\n";
 
         // Give characters some extra mana for demonstration
         xing->restoreMana(100);

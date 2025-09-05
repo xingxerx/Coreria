@@ -67,7 +67,7 @@ public:
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🌍 Epoch of Elria - 3D Game Engine 🌍</title>
+    <title>🌍 Coreria everything TM - 3D Game Engine 🌍</title>
     <style>
         body {
             margin: 0;
@@ -399,11 +399,11 @@ public:
         function resetCamera() { engine.resetCamera(); }
 
         // Start the engine
-        const engine = new EpochOfElriaEngine();
+        const engine = new CoreriaEverythingTMEngine();
 
         // Welcome message
         setTimeout(() => {
-            engine.showNotification('🌍 Welcome to Epoch of Elria Game Engine! 🌍\nUse WASD to explore, E for Edit Mode, X to create platforms!');
+            engine.showNotification('🌍 Welcome to Coreria everything TM Game Engine! 🌍\nUse WASD to explore, E for Edit Mode, X to create platforms!');
         }, 1000);
     </script>
 </body>

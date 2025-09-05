@@ -1,4 +1,4 @@
-# Makefile for Epoch of Elria Game Engine
+# Makefile for Coreria everything TM Game Engine
 
 CXX = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -pthread
@@ -17,8 +17,8 @@ LEGACY_SOURCES = \
     $(EXTERNAL)/Vector2D.cpp \
     $(EXTERNAL)/graphics.cpp
 
-DREAM_WEAVER_SOURCES = \
-    main_dream_weaver_complete.cpp \
+CORERIA_SOURCES = \
+    main_coreria_complete.cpp \
     $(EXTERNAL)/GameObject3D.cpp \
     $(EXTERNAL)/GameObject.cpp \
     $(EXTERNAL)/GameEnvironment.cpp \
@@ -47,7 +47,7 @@ MEMORY_SYSTEM_SOURCES = \
 
 # Object files
 LEGACY_OBJECTS = $(LEGACY_SOURCES:%.cpp=$(OBJDIR)/%.o)
-DREAM_WEAVER_OBJECTS = $(DREAM_WEAVER_SOURCES:%.cpp=$(OBJDIR)/%.o)
+CORERIA_OBJECTS = $(CORERIA_SOURCES:%.cpp=$(OBJDIR)/%.o)
 RPG_CHARACTERS_OBJECTS = $(RPG_CHARACTERS_SOURCES:%.cpp=$(OBJDIR)/%.o)
 OPEN_WORLD_3D_OBJECTS = $(OPEN_WORLD_3D_SOURCES:%.cpp=$(OBJDIR)/%.o)
 MEMORY_SYSTEM_OBJECTS = $(MEMORY_SYSTEM_SOURCES:%.cpp=$(OBJDIR)/%.o)
@@ -55,7 +55,7 @@ MEMORY_SYSTEM_OBJECTS = $(MEMORY_SYSTEM_SOURCES:%.cpp=$(OBJDIR)/%.o)
 # Targets
 TARGETS = \
     $(BINDIR)/game_engine_parallel_demo \
-    $(BINDIR)/dream_weaver_complete \
+    $(BINDIR)/coreria_complete \
     $(BINDIR)/rpg_characters \
     $(BINDIR)/game_3d_openworld \
     $(BINDIR)/memory_system

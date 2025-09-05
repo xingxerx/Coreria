@@ -1,9 +1,9 @@
 [package]
-name = "epoch-of-elria-advanced"
+name = "coreria-everything-tm-advanced"
 version = "0.2.0"
 edition = "2021"
-authors = ["Epoch of Elria Team"]
-description = "Advanced Cel/Neon/Spiral renderer for Epoch of Elria"
+authors = ["Coreria everything TM Team"]
+description = "Advanced Cel/Neon/Spiral renderer for Coreria everything TM"
 
 [dependencies]
 wgpu = "0.17"

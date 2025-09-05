@@ -1,12 +1,12 @@
-# Epoch of Elria - A Universe of Games and Tools
+# Coreria everything TM - A Universe of Games and Tools
 
-This repository contains the "Epoch of Elria" project, a collection of games and tools developed in C++ and Rust. The main project is "The Dream Weaver's Heart," a narrative-driven 3D RPG.
+This repository contains the "Coreria everything TM" project, a collection of games and tools developed in C++ and Rust. The main project is "Coreria everything TM," a narrative-driven 3D RPG.
 
 ---
 
-## 🌟 The Dream Weaver's Heart - A Narrative 3D RPG
+## 🌟 Coreria everything TM - A Narrative 3D RPG
 
-**The Dream Weaver's Heart** is an immersive RPG set in the infinite Metaverse, where consciousness shapes reality through stories, memories, and pure melody. Four unique heroes must unite to transform The One - an ancient entity of absolute order - through collaboration rather than destruction.
+**Coreria everything TM** is an immersive RPG set in the infinite Metaverse, where consciousness shapes reality through stories, memories, and pure melody. Four unique heroes must unite to transform The One - an ancient entity of absolute order - through collaboration rather than destruction.
 
 ### 🎭 Main Characters
 
@@ -36,7 +36,7 @@ To build and run the game, use the following `make` commands:
 
 ```bash
 # Build the complete game
-make dream_weaver_complete
+make coreria_complete
 
 # Run the game
 make run-complete
@@ -70,7 +70,7 @@ A chat moderation tool written in Rust. This tool is a separate, experimental pr
 ### Running
 
 ```bash
-# Navigate to the epoch-of-elria directory and run
+# Navigate to the coreria-everything-tm directory and run
 cargo run --bin ArchReactorAIlogic
 ```
 
@@ -83,7 +83,7 @@ A small, self-contained Rust program demonstrating a concept of self-reflection 
 ### Running
 
 ```bash
-# Navigate to the epoch-of-elria directory and run
+# Navigate to the coreria-everything-tm directory and run
 cargo run --bin Meta-CognitionLayer
 ```
 
@@ -91,7 +91,7 @@ cargo run --bin Meta-CognitionLayer
 
 ## Legacy Engine
 
-The repository also contains the original 2D C++ game engine with parallel processing and SVG graphics. This was the precursor to "The Dream Weaver's Heart."
+The repository also contains the original 2D C++ game engine with parallel processing and SVG graphics. This was the precursor to "Coreria everything TM."
 
 For more information on the legacy engine, please see the [LEGACY_README.md](LEGACY_README.md).
 
@@ -99,7 +99,7 @@ For more information on the legacy engine, please see the [LEGACY_README.md](LEG
 
 ## 📝 License
 
-This project is part of the "Epoch of Elria" game development series. Open source and free to use.
+This project is part of the "Coreria everything TM" game development series. Open source and free to use.
 
 ## 🤝 Contributing
 

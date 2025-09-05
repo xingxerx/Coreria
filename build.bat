@@ -24,9 +24,9 @@ goto menu
 
 :rust_game
 echo.
-echo Building and running Epoch of Elria (Rust Game Engine)...
+echo Building and running Coreria everything TM (Rust Game Engine)...
 echo.
-cargo run --bin epoch_of_elria
+cargo run --bin coreria_everything_tm
 if %ERRORLEVEL% neq 0 (
     echo.
     echo ❌ Graphics mode failed
@@ -38,10 +38,10 @@ goto end
 
 :dream_weavers_heart
 echo.
-echo Building and running The Dream Weaver's Heart (C++ Demos)...
+echo Building and running Coreria everything TM (C++ Demos)...
 echo.
 cd /d "%~dp0cpp_src"
-g++ -std=c++17 -Wall -Wextra -O2 main_dream_weaver_complete.cpp GameObject3D.cpp -o dream_weaver_complete.exe
+g++ -std=c++17 -Wall -Wextra -O2 main_coreria_complete.cpp GameObject3D.cpp -o coreria_complete.exe
 if %errorlevel% neq 0 (
     echo ❌ Build failed!
     goto end

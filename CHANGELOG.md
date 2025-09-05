@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the Epoch of Elria project will be documented in this file.
+All notable changes to the Coreria everything TM project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -39,7 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Scene graph with hierarchical object management
 - SVG-based character and UI rendering
 - Open-world sandbox environment
-- The Dream Weaver's Heart RPG mode
+- Coreria everything TM RPG mode
 - Four unique character system (Xing, Xerx, The Heart, Lyra)
 - Narrative combat and storytelling mechanics
 - Dynamic weather and day/night cycles
@@ -59,7 +59,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Game Modes
 - **Sandbox Mode**: Open-world exploration
-- **RPG Mode**: The Dream Weaver's Heart complete experience
+- **RPG Mode**: Coreria everything TM complete experience
 - **3D Exploration**: Pure navigation and interaction
 - **Console Mode**: Text-based interaction and debugging
 
@@ -108,13 +108,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Version 0.1.0 - "Foundation Release"
 
-This is the initial release of the Epoch of Elria game engine, featuring a complete rewrite from C++ to Rust with advanced memory management capabilities.
+This is the initial release of the Coreria everything TM game engine, featuring a complete rewrite from C++ to Rust with advanced memory management capabilities.
 
 **Key Highlights:**
 - 🧠 **Advanced Memory Management**: Enterprise-grade garbage collection with real-time monitoring
 - 🎮 **Complete Game Engine**: Full 3D graphics, physics, audio, and input systems
 - 🌍 **Open World**: Sandbox environment with procedural elements
-- 🎭 **RPG Experience**: The Dream Weaver's Heart with four unique characters
+- 🎭 **RPG Experience**: Coreria everything TM with four unique characters
 - 🚀 **Performance**: 60+ FPS with efficient resource usage
 - 🔧 **Developer Tools**: Web UI, console commands, and debugging features
 
@@ -139,8 +139,8 @@ This is a ground-up rewrite. Previous C++ code is preserved in the `epoch-of-elr
 
 **Installation:**
 ```bash
-git clone https://github.com/xingxerx/Epoch-of-Elria.git
-cd Epoch-of-Elria
+git clone https://github.com/xingxerx/Coreria-everything-TM.git
+cd Coreria-everything-TM
 cargo run --release
 ```
 

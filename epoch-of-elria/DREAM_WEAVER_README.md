@@ -1,10 +1,10 @@
-# The Dream Weaver's Heart - Complete Game Guide
+# Coreria everything TM - Complete Game Guide
 
 A narrative-driven RPG where four heroes unite against absolute order through collaborative storytelling and harmony.
 
 ## 🌟 Game Overview
 
-**The Dream Weaver's Heart** is an immersive RPG set in the infinite Metaverse, where consciousness shapes reality through stories, memories, and pure melody. Four unique heroes must transform The One - an ancient entity of absolute order - through collaboration rather than destruction.
+**Coreria everything TM** is an immersive RPG set in the infinite Metaverse, where consciousness shapes reality through stories, memories, and pure melody. Four unique heroes must transform The One - an ancient entity of absolute order - through collaboration rather than destruction.
 
 ### 🎭 Main Characters
 
@@ -63,16 +63,16 @@ Switch between any of the four heroes, each with unique abilities:
 ### Quick Start
 ```bash
 # Build the complete game
-g++ -std=c++17 -Wall -Wextra -O2 main_dream_weaver_complete.cpp -o dream_weaver_complete
+g++ -std=c++17 -Wall -Wextra -O2 main_coreria_complete.cpp -o coreria_complete
 
 # Run the game
-./dream_weaver_complete
+./coreria_complete
 ```
 
 ### Using Makefile
 ```bash
 # Build complete game
-make dream_weaver_complete
+make coreria_complete
 
 # Quick build and run
 make game
@@ -175,7 +175,7 @@ make rpg_characters
 
 ## 🚀 Game Modes
 
-### Complete Experience (`main_dream_weaver_complete.cpp`)
+### Complete Experience (`main_coreria_complete.cpp`)
 Full integrated game with all systems, characters, and story elements.
 
 ### Character Demo (`main_rpg_characters.cpp`)  

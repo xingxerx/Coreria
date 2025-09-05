@@ -1,4 +1,4 @@
-# Building The Dream Weaver's Heart Game Engine
+# Building Coreria everything TM Game Engine
 
 ## 🔧 Setup Options
 
@@ -23,8 +23,8 @@
 
 4. **Build the Game**:
    ```cmd
-   cd "F:\Epoch of Elria"
-   g++ -std=c++17 -Wall -Wextra -O2 main_dream_weaver_complete.cpp -o dream_weaver_complete.exe
+   cd "F:\Coreria everything TM"
+   g++ -std=c++17 -Wall -Wextra -O2 main_coreria_complete.cpp -o coreria_complete.exe
    ```
 
 ### Option 2: Visual Studio Community (Free)
@@ -77,13 +77,13 @@
 ### If you have g++ available:
 ```bash
 # Navigate to project directory
-cd "F:\Epoch of Elria"
+cd "F:\Coreria everything TM"
 
-# Build the complete Dream Weaver's Heart game
-g++ -std=c++17 -Wall -Wextra -O2 main_dream_weaver_complete.cpp -o dream_weaver_complete
+# Build the complete Coreria everything TM game
+g++ -std=c++17 -Wall -Wextra -O2 main_coreria_complete.cpp -o coreria_complete
 
 # Run the game
-./dream_weaver_complete
+./coreria_complete
 
 # Build other game variants
 g++ -std=c++17 main_rpg_characters.cpp -o rpg_characters
@@ -97,7 +97,7 @@ g++ -std=c++17 main_memory_system.cpp -o memory_system
 make all
 
 # Build specific games
-make dream_weaver_complete
+make coreria_complete
 make rpg_characters
 make game_3d_openworld
 
@@ -128,20 +128,20 @@ make game
 
 ```bash
 # Minimal build (C++11 compatible)
-g++ -std=c++11 main_dream_weaver_complete.cpp -o game
+g++ -std=c++11 main_coreria_complete.cpp -o game
 
 # Debug build
-g++ -std=c++17 -g -Wall -Wextra main_dream_weaver_complete.cpp -o game_debug
+g++ -std=c++17 -g -Wall -Wextra main_coreria_complete.cpp -o game_debug
 
 # Optimized release build
-g++ -std=c++17 -O3 -DNDEBUG main_dream_weaver_complete.cpp -o game_release
+g++ -std=c++17 -O3 -DNDEBUG main_coreria_complete.cpp -o game_release
 ```
 
 ## 🎯 Running the Games
 
-### The Complete Dream Weaver's Heart Experience:
+### The Complete Coreria everything TM Experience:
 ```bash
-./dream_weaver_complete
+./coreria_complete
 ```
 - Full integrated game with all 4 characters + The One
 - 3D world exploration with WASD movement
@@ -189,13 +189,13 @@ F:\Epoch of Elria\
 ### Example Development Session:
 ```bash
 # 1. Navigate to project
-cd "F:\Epoch of Elria"
+cd "F:\Coreria everything TM"
 
 # 2. Edit files (use any editor)
-notepad main_dream_weaver_complete.cpp
+notepad main_coreria_complete.cpp
 
 # 3. Build
-g++ -std=c++17 main_dream_weaver_complete.cpp -o game
+g++ -std=c++17 main_coreria_complete.cpp -o game
 
 # 4. Run and test
 ./game

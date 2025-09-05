@@ -30,8 +30,8 @@ public:
         xerx = std::unique_ptr<Xerx>(new Xerx(Vector3D(10, 2, 0)));
         heart = std::unique_ptr<TheHeart>(new TheHeart(Vector3D(5, 3, 5)));
 
-        std::cout << "\n🌍 THE DREAM WEAVER'S HEART - REALITY MANIPULATION SYSTEM 🌍\n";
-        std::cout << "Where consciousness shapes the very fabric of existence!\n\n";
+        std::cout << "\n🌍 Coreria everything TM - REALITY MANIPULATION SYSTEM 🌍\n";
+        std::cout << "Where consciousness shapes the very fabric of existence! TM\n\n";
 
         // Give characters some extra mana for demonstration
         xing->restoreMana(100);

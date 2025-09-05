@@ -1,11 +1,11 @@
 #!/bin/bash
 
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║              EPOCH OF ELRIA GAME ENGINE                     ║"
+echo "║              CORERIA EVERYTHING TM GAME ENGINE              ║"
 echo "║                   Windowed Application                      ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
-echo "🌍 Starting Epoch of Elria 3D Game Engine..."
+echo "🌍 Starting Coreria everything TM 3D Game Engine..."
 echo ""
 
 # Method 1: Try to create and open windowed HTML5 application
@@ -47,10 +47,10 @@ else
             echo "❌ Console build failed! Trying existing games..."
             if [ -f "standalone_game_engine" ]; then
                 echo "✅ Using existing standalone engine..."
-                cp standalone_game_engine EpochOfElriaEngine
+                cp standalone_game_engine CoreriaEverythingTMEngine
             elif [ -f "simple_3d_game" ]; then
                 echo "✅ Using simple 3D game..."
-                cp simple_3d_game EpochOfElriaEngine
+                cp simple_3d_game CoreriaEverythingTMEngine
             else
                 echo "❌ No games available! Please install g++ compiler."
                 echo ""

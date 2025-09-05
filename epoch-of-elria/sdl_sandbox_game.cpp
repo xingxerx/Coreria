@@ -77,6 +77,7 @@ private:
 
     const int WINDOW_WIDTH = 1024;
     const int WINDOW_HEIGHT = 768;
+    const int TARGET_FPS = 120;
 
 public:
     SDLSandboxGame() : window(nullptr), renderer(nullptr), font(nullptr), running(false),
@@ -104,7 +105,8 @@ public:
             return false;
         }
 
-        renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+        // Create renderer without VSYNC to allow 120+ FPS when possible
+        renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
         if (renderer == nullptr) {
             std::cerr << "Renderer could not be created! SDL Error: " << SDL_GetError() << std::endl;
             return false;
@@ -267,9 +269,18 @@ public:
         std::cout << "Use WASD to move, collect yellow squares!" << std::endl;
 
         while (running) {
+            Uint32 frameStart = SDL_GetTicks();
+
             handleEvents();
             update();
             render();
+
+            // Cap to target FPS
+            Uint32 frameTime = SDL_GetTicks() - frameStart;
+            Uint32 targetMs = static_cast<Uint32>(1000.0f / TARGET_FPS);
+            if (frameTime < targetMs) {
+                SDL_Delay(targetMs - frameTime);
+            }
         }
 
         cleanup();

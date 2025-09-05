@@ -1,4 +1,4 @@
-# 🌟 Epoch of Elria - Advanced Game Engine
+# 🌟 Coreria everything TM - Advanced Game Engine
 
 [![Rust](https://img.shields.io/badge/rust-1.70+-orange.svg)](https://www.rust-lang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -38,7 +38,7 @@
 ## 🏗️ Architecture
 
 ```
-Epoch of Elria/
+Coreria-everything-TM/
 ├── src/                    # Rust source code
 │   ├── main.rs            # Main application entry
 │   ├── lib.rs             # Core engine library
@@ -50,7 +50,7 @@ Epoch of Elria/
 │   ├── audio.rs           # Audio system
 │   ├── game_objects.rs    # Game entity management
 │   └── scene.rs           # Scene graph management
-├── epoch-of-elria/        # Legacy C++ implementation
+├── coreria-everything-tm/ # Legacy C++ implementation
 ├── docs/                  # Documentation
 └── scripts/               # Build and utility scripts
 ```
@@ -66,8 +66,8 @@ Epoch of Elria/
 
 ```bash
 # Clone the repository
-git clone https://github.com/xingxerx/Epoch-of-Elria.git
-cd Epoch-of-Elria
+git clone https://github.com/xingxerx/Coreria-everything-TM.git
+cd Coreria-everything-TM
 
 # Build and run
 cargo run --release
@@ -175,8 +175,8 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 ### Development Setup
 ```bash
 # Fork and clone the repository
-git clone https://github.com/yourusername/Epoch-of-Elria.git
-cd Epoch-of-Elria
+git clone https://github.com/yourusername/Coreria-everything-TM.git
+cd Coreria-everything-TM
 
 # Create a feature branch
 git checkout -b feature/amazing-feature
@@ -192,9 +192,9 @@ git push origin feature/amazing-feature
 
 ## 📚 Documentation
 
-- **[Build Instructions](epoch-of-elria/BUILD_INSTRUCTIONS.md)**: Detailed setup guide
-- **[Game Guide](epoch-of-elria/DREAM_WEAVER_README.md)**: Complete gameplay documentation
-- **[API Documentation](https://docs.rs/epoch_of_elria)**: Code documentation
+- **[Build Instructions](coreria-everything-tm/BUILD_INSTRUCTIONS.md)**: Detailed setup guide
+- **[Game Guide](coreria-everything-tm/CORERIA_README.md)**: Complete gameplay documentation
+- **[API Documentation](https://docs.rs/coreria_everything_tm)**: Code documentation
 - **[Architecture Guide](docs/ARCHITECTURE.md)**: Engine design overview
 
 ## 🐛 Known Issues

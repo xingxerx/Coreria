@@ -1,4 +1,4 @@
-# Epoch of Elria - Enhanced C++ Game Engine
+# Coreria everything TM - Enhanced C++ Game Engine
 
 A high-performance C++ game engine featuring parallel processing, SVG graphics, and optimized texture management.
 

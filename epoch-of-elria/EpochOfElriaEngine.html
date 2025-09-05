@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html><head><title>🌍 Epoch of Elria - 3D Game Engine with Dream Weaver Characters</title>
+<html><head><title>🌍 Coreria everything TM - 3D Game Engine</title>
 <style>
 body{margin:0;background:linear-gradient(135deg,#0c0c0c 0%,#1a1a2e 50%,#16213e 100%);font-family:'Courier New',monospace;color:#fff;height:100vh;overflow:hidden}
 .container{display:flex;flex-direction:column;height:100vh}
@@ -334,7 +334,7 @@ function initializeGame() {
 
     // Welcome message
     setTimeout(() => {
-        showNotification('🌍 Welcome to Epoch of Elria - The Dream Weaver\'s Heart!\n\n🌟 All Dream Weaver characters are present:\n• Xing - The Weaver\n• Xerx - The Liberator\n• The Heart - Catalyst\n• Lyra - Pure Melody\n• The One - Ancient Order\n\nUse character abilities, explore the 3D metaverse!');
+        showNotification('🌍 Welcome to Coreria everything TM!\n\n🌟 All characters are present:\n• Xing - The Weaver\n• Xerx - The Liberator\n• The Heart - Catalyst\n• Lyra - Pure Melody\n• The One - Ancient Order\n\nUse character abilities, explore the 3D metaverse!');
     }, 1500);
 }
 
@@ -615,7 +615,7 @@ document.addEventListener('keydown', (e) => {
         case 'p': openPortal(); break;
         case ' ': resetCamera(); e.preventDefault(); break;
         case 'escape':
-            showNotification('👋 Thanks for exploring Epoch of Elria!\n\nThe Dream Weaver\'s Heart continues...');
+            showNotification('👋 Thanks for exploring Coreria everything TM!\n\nThe adventure continues...');
             break;
     }
 });
@@ -660,5 +660,5 @@ function create(){const w=document.querySelector('.world'),p=document.createElem
 function move(dir){alert('📷 Camera moved '+dir.toUpperCase())}
 function reset(){alert('📷 Camera reset to default position')}
 document.addEventListener('keydown',e=>{switch(e.key.toLowerCase()){case 'w':move('w');break;case 'a':move('a');break;case 's':move('s');break;case 'd':move('d');break;case 'e':toggleEdit();break;case 'x':create();break;case ' ':reset();e.preventDefault();break}});
-setTimeout(()=>alert('🌍 Welcome to Epoch of Elria Game Engine!\nUse WASD, E for Edit Mode, X to create platforms!'),1000);
+setTimeout(()=>alert('🌍 Welcome to Coreria everything TM Game Engine!\nUse WASD, E for Edit Mode, X to create platforms!'),1000);
 </script></body></html>

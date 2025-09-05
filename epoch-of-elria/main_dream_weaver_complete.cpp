@@ -14,7 +14,7 @@
 #include "DreamWeaverCharacters.h"
 #include "TheOneAntagonist.h"
 
-// --- Complete Dream Weaver's Heart Game ---
+// --- Complete Coreria everything TM Game ---
 class DreamWeaverGame {
 private:
     // Characters
@@ -58,8 +58,8 @@ public:
         active_character = xing.get();
 
         std::cout << "\n╔══════════════════════════════════════════════════════════════╗\n";
-        std::cout << "║                THE DREAM WEAVER'S HEART                     ║\n";
-        std::cout << "║              Complete Metaverse Experience                  ║\n";
+        std::cout << "║                   Coreria everything TM                     ║\n";
+        std::cout << "║                 Complete Metaverse Experience                 ║\n";
         std::cout << "╚══════════════════════════════════════════════════════════════╝\n\n";
 
         std::cout << "The cosmic battle for narrative freedom begins in the infinite Metaverse!\n";
@@ -703,7 +703,7 @@ public:
         std::cout << "Perfect Harmony: " << (perfect_harmony_achieved ? "Yes" : "No") << "\n";
         std::cout << "Lyra Awakened: " << (lyra_awakened ? "Yes" : "No") << "\n\n";
 
-        std::cout << "Thank you for playing The Dream Weaver's Heart!\n";
+        std::cout << "Thank you for playing Coreria everything TM!\n";
         std::cout << "The saga of existence continues in infinite possibility...\n";
     }
 

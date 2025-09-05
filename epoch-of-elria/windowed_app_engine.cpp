@@ -298,6 +298,8 @@ public:
         running = true;
 
         auto lastTime = std::chrono::high_resolution_clock::now();
+        constexpr int TARGET_FPS = 120;
+        const double targetFrameMs = 1000.0 / TARGET_FPS;
 
         while (running) {
             MSG msg;
@@ -306,14 +308,19 @@ public:
                 DispatchMessage(&msg);
             }
 
-            auto currentTime = std::chrono::high_resolution_clock::now();
-            double deltaTime = std::chrono::duration<double>(currentTime - lastTime).count();
-            lastTime = currentTime;
+            auto frameStart = std::chrono::high_resolution_clock::now();
+            double deltaTime = std::chrono::duration<double>(frameStart - lastTime).count();
+            lastTime = frameStart;
 
             update(deltaTime);
             render();
 
-            Sleep(16); // ~60 FPS
+            auto frameEnd = std::chrono::high_resolution_clock::now();
+            double frameElapsedMs = std::chrono::duration<double, std::milli>(frameEnd - frameStart).count();
+            int sleepMs = static_cast<int>(targetFrameMs - frameElapsedMs);
+            if (sleepMs > 0) {
+                Sleep(sleepMs); // target ~120 FPS
+            }
         }
     }
 
