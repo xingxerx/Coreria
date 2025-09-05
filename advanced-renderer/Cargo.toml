@@ -1,0 +1,26 @@
+[package]
+name = "epoch-of-elria-advanced"
+version = "0.2.0"
+edition = "2021"
+authors = ["Epoch of Elria Team"]
+description = "Advanced Cel/Neon/Spiral renderer for Epoch of Elria"
+
+[dependencies]
+wgpu = "0.18"
+winit = "0.29"
+pollster = "0.3"
+bytemuck = { version = "1.14", features = ["derive"] }
+anyhow = "1.0"
+cgmath = "0.18"
+env_logger = "0.10"
+log = "0.4"
+image = "0.24"
+tobj = "4.0"
+
+[dependencies.wgpu-hal]
+version = "0.18"
+features = ["vulkan", "dx12", "metal", "gles"]
+
+[[bin]]
+name = "advanced"
+path = "src/main.rs"

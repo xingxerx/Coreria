@@ -100,63 +100,14 @@ impl GameUI {
         }
     }
 
-    fn render_clock(&self, _window: &mut Window, time_info: &TimeInfo) {
-        let phase_name = if time_info.is_day { "☀️ DAY" } else { "🌙 NIGHT" };
-        let minutes_in_phase = (time_info.phase_progress * if time_info.is_day { 10.0 } else { 5.0 }) as u32;
-        let seconds_in_phase = ((time_info.phase_progress * if time_info.is_day { 600.0 } else { 300.0 }) % 60.0) as u32;
-
-        // Calculate progress bar for visual feedback
-        let progress_chars = (time_info.phase_progress * 20.0) as usize;
-        let progress_bar = "█".repeat(progress_chars) + &"░".repeat(20 - progress_chars);
-
-        let clock_text = format!("🕐 {} {:02}:{:02} [{}] {:.0}%",
-                               phase_name,
-                               minutes_in_phase,
-                               seconds_in_phase,
-                               progress_bar,
-                               time_info.phase_progress * 100.0);
-
-        // Enhanced clock display with progress visualization
-        if time_info.total_elapsed as u32 % 5 == 0 { // Update every 5 seconds to avoid spam
-            println!("{}", clock_text);
-
-            // Add atmospheric status
-            if time_info.is_day {
-                if time_info.phase_progress < 0.2 {
-                    println!("🌅 Dawn breaks over Elria...");
-                } else if time_info.phase_progress > 0.8 {
-                    println!("🌇 Dusk approaches...");
-                }
-            } else {
-                if time_info.phase_progress < 0.3 {
-                    println!("🌌 The spiral energies grow stronger in darkness...");
-                } else if time_info.phase_progress > 0.7 {
-                    println!("✨ Neon lights pierce the deep blue night...");
-                }
-            }
-        }
+    fn render_clock(&self, _window: &mut Window, _time_info: &TimeInfo) {
+        // Clock rendering would be implemented as UI overlay in a full implementation
+        // For now, all visual feedback is handled through the 3D scene and atmospheric lighting
     }
 
-    fn render_minimap(&self, _window: &mut Window, player_pos: Vector3<f32>, _platforms: &[Platform]) {
-        // Enhanced minimap with ASCII art representation
-        // This would be a proper 2D overlay in a full implementation
-
-        // Create a simple ASCII minimap every 3 seconds
-        let time_check = player_pos.x as i32 + player_pos.z as i32; // Simple time-based check
-        if time_check % 30 == 0 { // Roughly every few seconds based on movement
-            println!("\n📍 === ELRIA MINIMAP ===");
-            println!("   Player: ({:.1}, {:.1}, {:.1})", player_pos.x, player_pos.y, player_pos.z);
-
-            // Simple ASCII representation of the world
-            println!("     🟦🟦🟦🟦🟦🟦🟦");
-            println!("     🟦  🟠    🟦🟦");
-            println!("     🟦     🔵   🟦");
-            println!("     🟦  🟣      🟦");
-            println!("     🟦    🔴     🟦"); // Player position (approximate)
-            println!("     🟦🟦🟦🟦🟦🟦🟦");
-            println!("   🟦=Ground 🟠=Orange 🔵=Blue 🟣=Purple 🔴=You");
-            println!("========================\n");
-        }
+    fn render_minimap(&self, _window: &mut Window, _player_pos: Vector3<f32>, _platforms: &[Platform]) {
+        // Minimap rendering would be implemented as UI overlay in a full implementation
+        // For now, all navigation feedback is handled through the 3D scene
     }
 }
 
@@ -302,15 +253,6 @@ fn apply_atmospheric_lighting(window: &mut Window, time_info: &TimeInfo) {
 
     // Apply enhanced atmospheric background
     window.set_background_color(r, g, b);
-
-    // Add atmospheric feedback
-    if time_info.total_elapsed as u32 % 60 == 0 { // Every minute
-        if time_info.is_day {
-            println!("🌞 The golden light of Elria illuminates the spiral paths...");
-        } else {
-            println!("🌌 Deep blue energies swirl through the neon-lit darkness...");
-        }
-    }
 }
 
 fn animate_energy_orbs(orbs: &mut Vec<SceneNode>, time_info: &TimeInfo) {
@@ -349,14 +291,8 @@ impl Platform {
 }
 
 fn main() {
-    println!("🌟 ═══════════════════════════════════════════════════════════");
-    println!("🌟    EPOCH OF ELRIA - Enhanced Platformer Edition");
-    println!("🌟 ═══════════════════════════════════════════════════════════");
-    println!("🎨 ✨ Cel/Neon/Spiral Atmospheric Engine");
-    println!("🌅 🌙 Dynamic Day/Night Cycles (10min day, 5min night)");
-    println!("🕐 📍 Real-time Clock & Minimap Systems");
-    println!("🎨 🌀 Deep Blue & Neon Orange Palette");
-    println!("🌟 ═══════════════════════════════════════════════════════════");
+    println!("🌟 EPOCH OF ELRIA - Enhanced Platformer Edition");
+    println!("🎮 Use WASD/Arrow Keys to move, SPACE to jump, ESC to exit");
 
     let mut window = Window::new("Epoch of Elria - Enhanced Platformer");
     window.set_light(Light::StickToCamera);
@@ -423,16 +359,7 @@ fn main() {
     let mut pressed_keys = HashSet::new();
     let mut last_ui_update = 0.0f32; // For UI update throttling
 
-    println!("\n🎮 ═══ CONTROLS ═══");
-    println!("   WASD or Arrow Keys: Smooth 360° Movement");
-    println!("   SPACE: Jump with Momentum");
-    println!("   ESC: Exit to Reality");
-    println!("\n🌀 ═══ EXPERIENCE ═══");
-    println!("   🌅 Watch atmospheric transitions");
-    println!("   🕐 Track time with the spiral clock");
-    println!("   📍 Navigate using the minimap");
-    println!("   ✨ Feel the neon energy flow");
-    println!("\n🚀 Starting your journey through Elria...");
+    // Game is now running - all feedback is visual in the 3D window
 
     while window.render() {
         // Calculate delta time
@@ -511,8 +438,5 @@ fn main() {
         }
     }
 
-    println!("\n🌟 ═══════════════════════════════════════════════════════════");
-    println!("🌟   Thank you for experiencing Epoch of Elria!");
-    println!("🌟   The spiral energies await your return...");
-    println!("🌟 ═══════════════════════════════════════════════════════════");
+    println!("🌟 Thanks for playing Epoch of Elria!");
 }
