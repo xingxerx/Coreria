@@ -143,7 +143,7 @@ impl OptimizedBlockRenderer {
 
     pub fn update_rendering(&mut self, world: &World, window: &mut Window, player_pos: Vector3<f32>) {
         let player_chunk = ChunkCoord::from_world_pos(player_pos.x, player_pos.z);
-        let render_distance = 6;
+        let render_distance = 8; // Increased render distance for better experience
 
         // Remove meshes for chunks that are too far away
         self.rendered_chunks.retain(|&chunk_coord| {

@@ -3,11 +3,13 @@ use noise::{NoiseFn, Perlin};
 use fnv::FnvHashMap;
 use kiss3d::scene::SceneNode;
 use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
+use std::thread;
 
-pub const CHUNK_SIZE: usize = 16;
-pub const CHUNK_HEIGHT: usize = 64; // Reduced from 256 to avoid stack overflow
-pub const WORLD_HEIGHT: i32 = 64;   // Reduced accordingly
-pub const SEA_LEVEL: i32 = 32;
+pub const CHUNK_SIZE: usize = 8;  // ULTRA PERFORMANCE: Reduced from 16 to 8
+pub const CHUNK_HEIGHT: usize = 32; // ULTRA PERFORMANCE: Reduced from 64 to 32
+pub const WORLD_HEIGHT: i32 = 32;   // ULTRA PERFORMANCE: Reduced accordingly
+pub const SEA_LEVEL: i32 = 16;      // ULTRA PERFORMANCE: Reduced accordingly
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BlockType {

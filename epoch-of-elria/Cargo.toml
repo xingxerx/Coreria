@@ -1,48 +1,45 @@
 [package]
 name = "coreria_everything_tm"
-version = "0.1.0"
-edition = "2021"
-authors = ["xingxerx <xingxerx@gmail.com>"]
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
 description = "Advanced 3D game engine with memory management, real-time graphics, physics simulation, and immersive audio"
-license = "MIT"
-repository = "https://github.com/xingxerx/Coreria-everything-TM"
-homepage = "https://github.com/xingxerx/Coreria-everything-TM"
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
 documentation = "https://docs.rs/coreria_everything_tm"
 keywords = ["game", "engine", "3d", "graphics", "physics"]
 categories = ["games", "graphics", "multimedia"]
 
 [dependencies]
 # 3D Graphics and rendering
-kiss3d = "0.35"
-nalgebra = "0.30"
+kiss3d.workspace = true
+nalgebra.workspace = true
 
 # Math and utilities
-rand = "0.8"
-noise = "0.8"
-fnv = "1.0"
+rand.workspace = true
+noise.workspace = true
+fnv.workspace = true
 
 # Logging and CLI
-env_logger = "0.10"
-log = "0.4"
-clap = { version = "4.5", features = ["derive"] }
+env_logger.workspace = true
+log.workspace = true
+clap.workspace = true
 
 # Serialization
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-toml = "0.7"
+serde.workspace = true
+serde_json.workspace = true
+toml.workspace = true
 
 # Audio system
-rodio = "0.17"
+rodio.workspace = true
 
 # Physics (collision detection)
-ncollide3d = "0.33"
+ncollide3d.workspace = true
 
 # Web server for debugging UI
-warp = "0.3"
-tokio = { version = "1.0", features = ["full"] }
+warp.workspace = true
+tokio.workspace = true
 
 # Window management
-winit = "0.29"
-
-[dev-dependencies]
-criterion = "0.5"
+winit.workspace = true
