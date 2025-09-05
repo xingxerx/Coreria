@@ -1,5 +1,5 @@
 use winit::event::{KeyboardInput, ElementState, VirtualKeyCode};
-use cgmath::{Vector3, Matrix4, perspective, Deg, Point3};
+use cgmath::{Vector3, Matrix4, perspective, Deg, Point3, InnerSpace};
 use std::collections::HashSet;
 use std::time::{Instant, Duration};
 

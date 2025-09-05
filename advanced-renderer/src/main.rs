@@ -193,32 +193,18 @@ impl Renderer {
         // Create depth texture
         let depth_texture = create_depth_texture(&device, &config);
 
-        // Placeholder pipelines (will be implemented with proper shaders)
-        // For now, we'll use the same pipeline for all passes
-        // In a full implementation, each would have different shaders
-
-        // Placeholder textures
-        let color_texture = create_render_texture(&device, &config);
-        let normal_texture = create_render_texture(&device, &config);
-
         Self {
             surface,
             device,
             queue,
             config,
             size,
-            geometry_pipeline: geometry_pipeline.clone(),
-            outline_pipeline: geometry_pipeline.clone(),
-            spiral_pipeline: geometry_pipeline.clone(),
-            bloom_pipeline: geometry_pipeline.clone(),
-            composite_pipeline: geometry_pipeline,
+            render_pipeline,
             vertex_buffer,
             index_buffer,
             uniform_buffer,
             uniform_bind_group,
             depth_texture,
-            color_texture,
-            normal_texture,
         }
     }
 
@@ -229,8 +215,6 @@ impl Renderer {
             self.config.height = new_size.height;
             self.surface.configure(&self.device, &self.config);
             self.depth_texture = create_depth_texture(&self.device, &self.config);
-            self.color_texture = create_render_texture(&self.device, &self.config);
-            self.normal_texture = create_render_texture(&self.device, &self.config);
         }
     }
 
@@ -266,8 +250,8 @@ impl Renderer {
                     resolve_target: None,
                     ops: wgpu::Operations {
                         load: wgpu::LoadOp::Clear(wgpu::Color {
-                            r: 0.18 * time_info.transition_factor,
-                            g: 0.25 * time_info.transition_factor,
+                            r: (0.18 * time_info.transition_factor) as f64,
+                            g: (0.25 * time_info.transition_factor) as f64,
                             b: 0.33,
                             a: 1.0,
                         }),
@@ -284,13 +268,13 @@ impl Renderer {
                 }),
             });
 
-            render_pass.set_pipeline(&self.geometry_pipeline);
+            render_pass.set_pipeline(&self.render_pipeline);
             render_pass.set_bind_group(0, &self.uniform_bind_group, &[]);
             render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
             render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
 
             // Render platforms
-            for platform in &game_state.platforms {
+            for _platform in &game_state.platforms {
                 // Update model matrix for each platform (simplified)
                 render_pass.draw_indexed(0..36, 0, 0..1);
             }
@@ -309,7 +293,7 @@ impl Renderer {
 pub async fn run() {
     env_logger::init();
 
-    let event_loop = EventLoop::new().unwrap();
+    let event_loop = EventLoop::new();
     let window = WindowBuilder::new()
         .with_title("🌟 Epoch of Elria - Advanced Cel/Neon/Spiral Edition")
         .with_inner_size(winit::dpi::LogicalSize::new(1280, 720))
@@ -366,7 +350,7 @@ pub async fn run() {
             }
             _ => {}
         }
-    }).unwrap();
+    });
 }
 
 #[repr(C)]
