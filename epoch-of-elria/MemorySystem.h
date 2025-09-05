@@ -179,21 +179,6 @@ public:
         std::cout << "================================" << std::endl;
     }
 
-    std::string getTypeString() const {
-        switch (type) {
-            case MemoryType::PERSONAL_MEMORY: return "Personal Memory";
-            case MemoryType::SHARED_EXPERIENCE: return "Shared Experience";
-            case MemoryType::COLLECTIVE_UNCONSCIOUS: return "Collective Unconscious";
-            case MemoryType::LIBRARY_KNOWLEDGE: return "Library Knowledge";
-            case MemoryType::LIBERATION_TRUTH: return "Liberation Truth";
-            case MemoryType::EMOTIONAL_IMPRINT: return "Emotional Imprint";
-            case MemoryType::NARRATIVE_FRAGMENT: return "Narrative Fragment";
-            case MemoryType::REALITY_ECHO: return "Reality Echo";
-            case MemoryType::DREAM_MEMORY: return "Dream Memory";
-            case MemoryType::THE_ONE_SUPPRESSION: return "Suppressed by The One";
-            default: return "Unknown";
-        }
-    }
 };
 
 // --- Memory Collection Class ---
@@ -331,7 +316,7 @@ public:
 
         std::cout << "\nFragments by Type:" << std::endl;
         for (const auto& pair : type_counts) {
-            std::cout << "  " << getTypeString(pair.first)
+            std::cout << "  " << getMemoryTypeString(pair.first)
                       << ": " << pair.second << std::endl;
         }
 
@@ -356,22 +341,23 @@ public:
     const std::vector<std::unique_ptr<EnhancedMemoryFragment>>& getFragments() const { return fragments; }
 
 private:
-    std::string getTypeString(MemoryType type) const {
-        switch (type) {
-            case MemoryType::PERSONAL_MEMORY: return "Personal Memory";
-            case MemoryType::SHARED_EXPERIENCE: return "Shared Experience";
-            case MemoryType::COLLECTIVE_UNCONSCIOUS: return "Collective Unconscious";
-            case MemoryType::LIBRARY_KNOWLEDGE: return "Library Knowledge";
-            case MemoryType::LIBERATION_TRUTH: return "Liberation Truth";
-            case MemoryType::EMOTIONAL_IMPRINT: return "Emotional Imprint";
-            case MemoryType::NARRATIVE_FRAGMENT: return "Narrative Fragment";
-            case MemoryType::REALITY_ECHO: return "Reality Echo";
-            case MemoryType::DREAM_MEMORY: return "Dream Memory";
-            case MemoryType::THE_ONE_SUPPRESSION: return "Suppressed by The One";
-            default: return "Unknown";
-        }
-    }
 };
+
+inline std::string getMemoryTypeString(MemoryType type) {
+    switch (type) {
+        case MemoryType::PERSONAL_MEMORY: return "Personal Memory";
+        case MemoryType::SHARED_EXPERIENCE: return "Shared Experience";
+        case MemoryType::COLLECTIVE_UNCONSCIOUS: return "Collective Unconscious";
+        case MemoryType::LIBRARY_KNOWLEDGE: return "Library Knowledge";
+        case MemoryType::LIBERATION_TRUTH: return "Liberation Truth";
+        case MemoryType::EMOTIONAL_IMPRINT: return "Emotional Imprint";
+        case MemoryType::NARRATIVE_FRAGMENT: return "Narrative Fragment";
+        case MemoryType::REALITY_ECHO: return "Reality Echo";
+        case MemoryType::DREAM_MEMORY: return "Dream Memory";
+        case MemoryType::THE_ONE_SUPPRESSION: return "Suppressed by The One";
+        default: return "Unknown";
+    }
+}
 
 // --- Memory Reconstruction Ability ---
 class MemoryAbility {
@@ -770,7 +756,7 @@ public:
             std::cout << "\n--- DISCOVERABLE FRAGMENTS ---" << std::endl;
             for (const auto& fragment : world_fragments) {
                 std::cout << "• " << fragment->getTitle()
-                          << " (" << fragment->getTypeString() << ")" << std::endl;
+                          << " (" << getMemoryTypeString(fragment->getType()) << ")" << std::endl;
             }
         }
 
