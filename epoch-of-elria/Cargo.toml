@@ -10,11 +10,13 @@ homepage.workspace = true
 documentation = "https://docs.rs/coreria_everything_tm"
 keywords = ["game", "engine", "3d", "graphics", "physics"]
 categories = ["games", "graphics", "multimedia"]
+default-run = "coreria_everything_tm"
 
 [dependencies]
 # 3D Graphics and rendering
 kiss3d.workspace = true
 nalgebra.workspace = true
+advanced_renderer = { path = "../advanced-renderer" }
 
 # Math and utilities
 rand.workspace = true
