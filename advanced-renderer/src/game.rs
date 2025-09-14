@@ -73,9 +73,9 @@ impl Player {
 
 #[derive(Debug, Clone)]
 pub struct Platform {
-    pub position: Vector3<f32>,
-    pub size: Vector3<f32>,
-    pub color: Vector3<f32>,
+    pub position: Vector3<f32>, // Retain position since it's essential
+    pub size: Vector3<f32>,     // Retain size since it's essential
+    pub color: Vector3<f32>,      // Consider using the color for rendering
 }
 
 impl Platform {
@@ -133,9 +133,9 @@ impl TimeSystem {
 
 #[derive(Debug, Clone)]
 pub struct TimeInfo {
-    pub is_day: bool,
-    pub phase_progress: f32,
-    pub transition_factor: f32,
+    pub is_day: bool,             // Keep is_day
+    pub phase_progress: f32,      // Could be used for more advanced effects
+    pub transition_factor: f32,   // Keep transition_factor
     pub cycle_time: f32,
     pub total_elapsed: f32,
     pub time_of_day: f32, // 0.0 = midnight, 0.5 = noon, 1.0 = midnight
@@ -158,7 +158,7 @@ impl GameState {
         let player = Player::new(Vector3::new(0.0, 5.0, 0.0));
         
         // Create platforms with Epoch of Elria colors
-        let platforms = vec![
+        let platforms: Vec<Platform> = vec![
             Platform::new(Vector3::new(0.0, -0.25, 0.0), Vector3::new(20.0, 0.5, 20.0), Vector3::new(0.18, 0.25, 0.33)), // Deep blue ground
             Platform::new(Vector3::new(5.0, 2.0, 5.0), Vector3::new(4.0, 0.5, 4.0), Vector3::new(1.0, 0.70, 0.07)),      // Neon orange
             Platform::new(Vector3::new(-3.0, 4.0, -2.0), Vector3::new(3.0, 0.5, 3.0), Vector3::new(0.5, 0.2, 0.8)),     // Purple
@@ -229,10 +229,10 @@ impl GameState {
         self.player.update(delta_time);
 
         // Update camera to follow player
-        self.camera_target = Point3::new(self.player.position.x, self.player.position.y + 2.0, self.player.position.z);
+        self.camera_target = Point3::new(self.player.position.x, self.player.position.y + 1.0, self.player.position.z);
         self.camera_position = Point3::new(
-            self.player.position.x + 10.0,
-            self.player.position.y + 8.0,
+            self.player.position.x + 0.0,
+            self.player.position.y + 3.0,
             self.player.position.z + 15.0,
         );
         self.view_matrix = Matrix4::look_at_rh(self.camera_position, self.camera_target, Vector3::unit_y());

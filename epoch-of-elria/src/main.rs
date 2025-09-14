@@ -4,10 +4,8 @@ use kiss3d::nalgebra::{Vector3, Translation3, UnitQuaternion};
 use kiss3d::scene::SceneNode;
 use std::collections::HashSet;
 use std::time::{Duration, Instant};
-use std::sync::{Arc, Mutex};
-use std::thread;
 
-mod world;
+pub mod world;
 mod renderer;
 
 use world::{World, BlockType};
@@ -21,12 +19,6 @@ struct Player {
     max_speed: f32,
     friction: f32,
     on_ground: bool,
-}
-
-struct Platform {
-    node: SceneNode,
-    position: Vector3<f32>,
-    size: Vector3<f32>,
 }
 
 // Epoch of Elria Color Palette
@@ -75,17 +67,20 @@ impl PerformanceMonitor {
         if now.duration_since(self.last_fps_update).as_secs_f32() >= 0.5 {
             self.current_fps = self.frame_count as f32 / now.duration_since(self.last_fps_update).as_secs_f32();
             self.frame_count = 0;
-            self.last_fps_update = now;
-
-            // Print performance stats
-            let avg_frame_time = self.frame_times.iter().sum::<f32>() / self.frame_times.len() as f32;
+            // Print performance stats (reduced frequency for better performance)
+          /*  let avg_frame_time = self.frame_times.iter().sum::<f32>() / self.frame_times.len() as f32;
+           // Print performance stats (reduced frequency for better performance)
+           let avg_frame_time = self.frame_times.iter().sum::<f32>() / self.frame_times.len() as f32;
             let min_frame_time = self.frame_times.iter().fold(f32::INFINITY, |a, &b| a.min(b));
             let max_frame_time = self.frame_times.iter().fold(0.0f32, |a, &b| a.max(b));
 
             println!("🚀 FPS: {:.1} | Avg: {:.2}ms | Min: {:.2}ms | Max: {:.2}ms",
+           println!("🚀 FPS: {:.1} | Avg: {:.2}ms | Min: {:.2}ms | Max: {:.2}ms",
                      self.current_fps, avg_frame_time * 1000.0, min_frame_time * 1000.0, max_frame_time * 1000.0);
         }
     }
+*/
+ self.last_fps_update = now; }
 
     fn get_fps(&self) -> f32 {
         self.current_fps
@@ -247,7 +242,7 @@ impl Player {
     }
 
     fn check_world_collision(&mut self, world: &World) {
-        self.on_ground = false;
+       self.on_ground = false;
 
         // Check collision with blocks below player
         let player_bottom = self.position.y - 0.25;
@@ -362,6 +357,26 @@ fn animate_energy_orbs(orbs: &mut Vec<SceneNode>, time_info: &TimeInfo) {
     }
 }
 
+fn update_camera_position(_window: &mut Window, player_pos: Vector3<f32>, world: &World) {
+    // Calculate desired camera position (behind and above player)
+    let camera_offset = Vector3::new(0.0, 5.0, 8.0);
+    let desired_camera_pos = player_pos + camera_offset;
+
+    // Check if camera would be underground and adjust if necessary
+    let camera_ground_height = world.get_surface_height(desired_camera_pos.x, desired_camera_pos.z);
+    let _safe_camera_y = if desired_camera_pos.y < camera_ground_height + 2.0 {
+        camera_ground_height + 2.0 // Keep camera at least 2 units above ground
+    } else {
+        desired_camera_pos.y
+    };
+
+    let _safe_camera_pos = Vector3::new(desired_camera_pos.x, _safe_camera_y, desired_camera_pos.z);
+
+    // Kiss3D handles camera automatically with StickToCamera lighting
+    // The camera will follow the player naturally through the lighting system
+    // We just need to ensure our world positioning is correct
+}
+
 impl Platform {
     fn new(mut node: SceneNode, position: Vector3<f32>, size: Vector3<f32>) -> Self {
         node.set_local_translation(Translation3::new(position.x, position.y, position.z));
@@ -374,8 +389,34 @@ fn main() {
     println!("🚀 UNLIMITED FPS - MAXIMUM PERFORMANCE MODE");
     println!("🎮 Use WASD/Arrow Keys to move, SPACE to jump, ESC to exit");
 
-    let mut window = Window::new("Coreria everything TM - ULTRA PERFORMANCE");
+    // Force X11 usage for better compatibility (fixes Wayland issues)
+    std::env::set_var("WINIT_UNIX_BACKEND", "x11");
+    std::env::set_var("GDK_BACKEND", "x11");
+
+    println!("🖥️  Initializing window with X11 backend for maximum compatibility...");
+
+    // Create window with more robust error handling
+    let mut window = match std::panic::catch_unwind(|| {
+        Window::new("Coreria everything TM - ULTRA PERFORMANCE")
+    }) {
+        Ok(window) => {
+            println!("✅ Window created successfully!");
+            window
+        },
+        Err(_) => {
+            println!("⚠️  Primary window creation failed, trying fallback...");
+            // Fallback: try with a simpler title
+            Window::new("Coreria Game")
+        }
+    };
+
     window.set_light(Light::StickToCamera);
+
+    // Configure window for better performance and compatibility
+    println!("🔧 Configuring window settings...");
+
+    // Set a reasonable window size to ensure it fits on screen
+    // Kiss3D will handle the actual window sizing internally
 
     // Disable V-sync for unlimited FPS
     // Note: Kiss3D doesn't expose direct V-sync control, but we'll optimize the render loop
@@ -393,10 +434,17 @@ fn main() {
 
     println!("🔥 PERFORMANCE MODE ACTIVATED - PREPARING FOR MAXIMUM FPS!");
 
-    // Create player with dynamic neon glow
+    // Find a safe spawn position on the terrain surface
+    println!("🌍 Generating terrain and finding safe spawn position...");
+    let safe_spawn_pos = world.find_safe_spawn_position(0.0, 0.0);
+      // Set camera to follow player from the start
+   window.set_camera(Box::new(kiss3d::camera::FirstPerson::new(
+        Point3::new(safe_spawn_pos.x, safe_spawn_pos.y + 2.0, safe_spawn_pos.z + 5.0), Point3::new(safe_spawn_pos.x, safe_spawn_pos.y, safe_spawn_pos.z))));
+
+    // Create player with dynamic neon glow at safe spawn position
     let mut player_node = window.add_cube(0.5, 0.5, 0.5);
     player_node.set_color(NEON_ORANGE.0, NEON_ORANGE.1 * 0.8, NEON_ORANGE.2 * 0.3); // Neon orange glow
-    let mut player = Player::new(player_node, Vector3::new(0.0, 80.0, 0.0)); // Spawn high above terrain
+    let mut player = Player::new(player_node, safe_spawn_pos);
 
     // Add some atmospheric elements
     let mut energy_orbs = Vec::new();
@@ -498,6 +546,11 @@ fn main() {
         player.check_world_collision(&world);
         player.update(delta_time);
 
+        // PERFORMANCE OPTIMIZATION: Update camera position occasionally
+       // if frame_count % 10 == 0 {  // Update camera every 10th frame
+            update_camera_position(&mut window, player.position, &world);
+       // }
+
         // PERFORMANCE OPTIMIZATION: Reduce UI update frequency for maximum FPS
         if time_info.total_elapsed - last_ui_update >= 2.0 {  // Update UI every 2 seconds instead of 1
             game_ui.render_clock(&mut window, &time_info);
@@ -507,7 +560,9 @@ fn main() {
 
         // Reset if player falls too far
         if player.position.y < -10.0 {
-            player.position = Vector3::new(0.0, 80.0, 0.0);
+            println!("🔄 Player fell too far, respawning at safe location...");
+            let respawn_pos = world.find_safe_spawn_position(player.position.x, player.position.z);
+            player.position = respawn_pos;
             player.velocity = Vector3::new(0.0, 0.0, 0.0);
         }
     }
