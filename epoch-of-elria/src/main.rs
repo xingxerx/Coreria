@@ -1,7 +1,8 @@
 use kiss3d::window::Window;
 use kiss3d::light::Light;
-use kiss3d::nalgebra::{Vector3, Translation3, UnitQuaternion};
+use kiss3d::nalgebra::{Vector3, Translation3, UnitQuaternion, Point3};
 use kiss3d::scene::SceneNode;
+use kiss3d::camera::{ArcBall, Camera};
 use std::collections::HashSet;
 use std::time::{Duration, Instant};
 
@@ -19,6 +20,12 @@ struct Player {
     max_speed: f32,
     friction: f32,
     on_ground: bool,
+}
+
+struct Platform {
+    node: SceneNode,
+    position: Vector3<f32>,
+    size: Vector3<f32>,
 }
 
 // Epoch of Elria Color Palette
@@ -68,19 +75,16 @@ impl PerformanceMonitor {
             self.current_fps = self.frame_count as f32 / now.duration_since(self.last_fps_update).as_secs_f32();
             self.frame_count = 0;
             // Print performance stats (reduced frequency for better performance)
-          /*  let avg_frame_time = self.frame_times.iter().sum::<f32>() / self.frame_times.len() as f32;
-           // Print performance stats (reduced frequency for better performance)
-           let avg_frame_time = self.frame_times.iter().sum::<f32>() / self.frame_times.len() as f32;
+            let avg_frame_time = self.frame_times.iter().sum::<f32>() / self.frame_times.len() as f32;
             let min_frame_time = self.frame_times.iter().fold(f32::INFINITY, |a, &b| a.min(b));
             let max_frame_time = self.frame_times.iter().fold(0.0f32, |a, &b| a.max(b));
 
             println!("🚀 FPS: {:.1} | Avg: {:.2}ms | Min: {:.2}ms | Max: {:.2}ms",
-           println!("🚀 FPS: {:.1} | Avg: {:.2}ms | Min: {:.2}ms | Max: {:.2}ms",
                      self.current_fps, avg_frame_time * 1000.0, min_frame_time * 1000.0, max_frame_time * 1000.0);
+
+            self.last_fps_update = now;
         }
     }
-*/
- self.last_fps_update = now; }
 
     fn get_fps(&self) -> f32 {
         self.current_fps
@@ -142,6 +146,79 @@ struct TimeInfo {
 struct GameUI {
     show_clock: bool,
     show_minimap: bool,
+}
+
+struct CameraSystem {
+    camera: ArcBall,
+    follow_distance: f32,
+    follow_height: f32,
+    smoothing: f32,
+}
+
+impl CameraSystem {
+    fn new(player_pos: Vector3<f32>, world: &World) -> Self {
+        // Calculate safe camera position - high above player and behind
+        let camera_height = player_pos.y + 50.0; // Raise camera by 50 units as requested
+        let camera_distance = 15.0;
+
+        // Ensure camera is above ground
+        let ground_height = world.get_surface_height(player_pos.x, player_pos.z - camera_distance);
+        let safe_camera_height = camera_height.max(ground_height + 10.0);
+
+        let camera_pos = Point3::new(
+            player_pos.x,
+            safe_camera_height,
+            player_pos.z + camera_distance
+        );
+        let target_pos = Point3::new(player_pos.x, player_pos.y, player_pos.z);
+
+        println!("📷 Camera positioned at ({:.1}, {:.1}, {:.1}) looking at ({:.1}, {:.1}, {:.1})",
+                 camera_pos.x, camera_pos.y, camera_pos.z,
+                 target_pos.x, target_pos.y, target_pos.z);
+
+        Self {
+            camera: ArcBall::new(camera_pos, target_pos),
+            follow_distance: camera_distance,
+            follow_height: 50.0, // 50 units above player as requested
+            smoothing: 0.1,
+        }
+    }
+
+    fn update(&mut self, player_pos: Vector3<f32>, world: &World, delta_time: f32) {
+        // Calculate desired camera position
+        let desired_camera_height = player_pos.y + self.follow_height;
+        let ground_height = world.get_surface_height(player_pos.x, player_pos.z - self.follow_distance);
+        let safe_camera_height = desired_camera_height.max(ground_height + 10.0);
+
+        let desired_camera_pos = Point3::new(
+            player_pos.x,
+            safe_camera_height,
+            player_pos.z + self.follow_distance
+        );
+        let desired_target = Point3::new(player_pos.x, player_pos.y + 2.0, player_pos.z);
+
+        // Smooth camera movement
+        let current_eye = self.camera.eye();
+        let current_at = self.camera.at();
+
+        let lerp_factor = (self.smoothing * delta_time * 60.0).min(1.0); // 60 FPS normalized
+
+        let new_eye = Point3::new(
+            current_eye.x + (desired_camera_pos.x - current_eye.x) * lerp_factor,
+            current_eye.y + (desired_camera_pos.y - current_eye.y) * lerp_factor,
+            current_eye.z + (desired_camera_pos.z - current_eye.z) * lerp_factor,
+        );
+
+        let new_at = Point3::new(
+            current_at.x + (desired_target.x - current_at.x) * lerp_factor,
+            current_at.y + (desired_target.y - current_at.y) * lerp_factor,
+            current_at.z + (desired_target.z - current_at.z) * lerp_factor,
+        );
+
+        // Update camera position by creating a new ArcBall
+        // ArcBall doesn't have set methods, so we recreate it
+        self.camera = ArcBall::new(new_eye, new_at);
+    }
 }
 
 impl GameUI {
@@ -357,25 +434,7 @@ fn animate_energy_orbs(orbs: &mut Vec<SceneNode>, time_info: &TimeInfo) {
     }
 }
 
-fn update_camera_position(_window: &mut Window, player_pos: Vector3<f32>, world: &World) {
-    // Calculate desired camera position (behind and above player)
-    let camera_offset = Vector3::new(0.0, 5.0, 8.0);
-    let desired_camera_pos = player_pos + camera_offset;
 
-    // Check if camera would be underground and adjust if necessary
-    let camera_ground_height = world.get_surface_height(desired_camera_pos.x, desired_camera_pos.z);
-    let _safe_camera_y = if desired_camera_pos.y < camera_ground_height + 2.0 {
-        camera_ground_height + 2.0 // Keep camera at least 2 units above ground
-    } else {
-        desired_camera_pos.y
-    };
-
-    let _safe_camera_pos = Vector3::new(desired_camera_pos.x, _safe_camera_y, desired_camera_pos.z);
-
-    // Kiss3D handles camera automatically with StickToCamera lighting
-    // The camera will follow the player naturally through the lighting system
-    // We just need to ensure our world positioning is correct
-}
 
 impl Platform {
     fn new(mut node: SceneNode, position: Vector3<f32>, size: Vector3<f32>) -> Self {
@@ -410,16 +469,8 @@ fn main() {
         }
     };
 
-    window.set_light(Light::StickToCamera);
-
     // Configure window for better performance and compatibility
     println!("🔧 Configuring window settings...");
-
-    // Set a reasonable window size to ensure it fits on screen
-    // Kiss3D will handle the actual window sizing internally
-
-    // Disable V-sync for unlimited FPS
-    // Note: Kiss3D doesn't expose direct V-sync control, but we'll optimize the render loop
 
     // Initialize performance monitoring
     let mut perf_monitor = PerformanceMonitor::new();
@@ -437,9 +488,12 @@ fn main() {
     // Find a safe spawn position on the terrain surface
     println!("🌍 Generating terrain and finding safe spawn position...");
     let safe_spawn_pos = world.find_safe_spawn_position(0.0, 0.0);
-      // Set camera to follow player from the start
-   window.set_camera(Box::new(kiss3d::camera::FirstPerson::new(
-        Point3::new(safe_spawn_pos.x, safe_spawn_pos.y + 2.0, safe_spawn_pos.z + 5.0), Point3::new(safe_spawn_pos.x, safe_spawn_pos.y, safe_spawn_pos.z))));
+
+    // Initialize camera system with safe positioning
+    let mut camera_system = CameraSystem::new(safe_spawn_pos, &world);
+
+    // Kiss3D will use the camera during render() calls
+    window.set_light(Light::StickToCamera);
 
     // Create player with dynamic neon glow at safe spawn position
     let mut player_node = window.add_cube(0.5, 0.5, 0.5);
@@ -466,7 +520,7 @@ fn main() {
     // Game is now running - MAXIMUM PERFORMANCE MODE ENGAGED!
     println!("🚀 ENTERING ULTRA HIGH PERFORMANCE RENDER LOOP!");
 
-    while window.render() {
+    while window.render_with_camera(&mut camera_system.camera) {
         // Calculate delta time for maximum precision
         let current_time = std::time::Instant::now();
         let delta_time = current_time.duration_since(last_time).as_secs_f32();
@@ -547,9 +601,9 @@ fn main() {
         player.update(delta_time);
 
         // PERFORMANCE OPTIMIZATION: Update camera position occasionally
-       // if frame_count % 10 == 0 {  // Update camera every 10th frame
-            update_camera_position(&mut window, player.position, &world);
-       // }
+        if frame_count % 5 == 0 {  // Update camera every 5th frame
+            camera_system.update(player.position, &world, delta_time);
+        }
 
         // PERFORMANCE OPTIMIZATION: Reduce UI update frequency for maximum FPS
         if time_info.total_elapsed - last_ui_update >= 2.0 {  // Update UI every 2 seconds instead of 1

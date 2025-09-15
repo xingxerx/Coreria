@@ -8,7 +8,6 @@ mod game;
 
 use game::GameState;
 use wgpu::util::DeviceExt;
-use cgmath::{Matrix4, InnerSpace};
 
 struct Renderer {
     surface: wgpu::Surface,

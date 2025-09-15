@@ -73,9 +73,9 @@ impl Player {
 
 #[derive(Debug, Clone)]
 pub struct Platform {
-    pub position: Vector3<f32>, // Retain position since it's essential
-    pub size: Vector3<f32>,     // Retain size since it's essential
-    pub color: Vector3<f32>,      // Consider using the color for rendering
+    pub position: Vector3<f32>,
+    pub size: Vector3<f32>,
+    pub color: Vector3<f32>,
 }
 
 impl Platform {
@@ -133,9 +133,9 @@ impl TimeSystem {
 
 #[derive(Debug, Clone)]
 pub struct TimeInfo {
-    pub is_day: bool,             // Keep is_day
-    pub phase_progress: f32,      // Could be used for more advanced effects
-    pub transition_factor: f32,   // Keep transition_factor
+    pub is_day: bool, // 
+    pub phase_progress: f32, // 
+    pub transition_factor: f32, // 
     pub cycle_time: f32,
     pub total_elapsed: f32,
     pub time_of_day: f32, // 0.0 = midnight, 0.5 = noon, 1.0 = midnight

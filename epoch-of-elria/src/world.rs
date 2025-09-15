@@ -18,6 +18,8 @@ pub enum BlockType {
     Sand,
     Water,
     Bedrock,
+    Wood,
+    Leaves,
 }
 
 impl BlockType {
